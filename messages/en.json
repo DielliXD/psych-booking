@@ -1,0 +1,164 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "services": "Services",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "mySessions": "My Sessions",
+    "book": "Book a Session"
+  },
+  "home": {
+    "heroTitle": "A calm space to work through what's on your mind",
+    "heroSubtitle": "One-on-one and couples therapy, in the format that feels right for you — video, chat, or messaging.",
+    "heroCta": "Book a Session",
+    "introTitle": "How it works",
+    "introText": "Choose a session type and format, pick a time that suits you, and you're set. No paperwork, no waiting rooms.",
+    "step1Title": "Choose your session",
+    "step1Text": "Individual or couples, video call, chat, or messaging — whatever fits your comfort.",
+    "step2Title": "Pick a time",
+    "step2Text": "See real availability and book instantly, in your own timezone.",
+    "step3Title": "Show up as you are",
+    "step3Text": "Share as much or as little as you'd like beforehand. There's no wrong way to begin.",
+    "trustTitle": "Why people choose to start here",
+    "trustText": "Reaching out is often the hardest part. Everything after that is built to feel simple, private, and entirely at your pace.",
+    "trust1Title": "Confidential, always",
+    "trust1Text": "What you share stays between you and your therapist. Every session and every note is private.",
+    "trust2Title": "Licensed and experienced",
+    "trust2Text": "Sessions are led by a licensed psychologist with hands-on clinical experience, not a chatbot or a script.",
+    "trust3Title": "No pressure, no commitment",
+    "trust3Text": "Book one session or many. There's no package to buy upfront and no obligation to continue.",
+    "testimonialTitle": "What clients say",
+    "testimonialQuote": "[Once you have client testimonials — with their permission — feature one or two short quotes here. Real feedback builds trust faster than anything else on this page.]",
+    "testimonialAttribution": "[Client name or initials, with consent]",
+    "finalCtaTitle": "Ready to talk to someone?",
+    "finalCtaText": "The first step is just picking a time. Everything else can wait until you're ready.",
+    "finalCtaButton": "Book Your First Session"
+  },
+  "about": {
+    "title": "About",
+    "introText": "A licensed psychologist offering a warm, evidence-based space for individuals and couples.",
+    "storyTitle": "My Story",
+    "storyText": "[Write 2-3 paragraphs in her own voice: what drew her to psychology, her path through training, and what she believes therapy should feel like. This is the most-read section on the page for a solo practice — worth writing carefully and personally rather than leaving generic.]",
+    "credentialsTitle": "Credentials & Experience",
+    "approachTitle": "My Approach",
+    "modalitiesTitle": "Methods I Use",
+    "modalitiesText": "[List the specific therapeutic modalities she's trained in — e.g. Cognitive Behavioral Therapy (CBT), Emotionally Focused Therapy (EFT) for couples, psychodynamic, person-centered — with a one-line plain-language explanation of each so clients unfamiliar with the terms still understand what to expect.]",
+    "whoIWorkWithTitle": "Who I Work Best With",
+    "whoIWorkWithText": "[Describe the kinds of concerns and clients she has the most experience and comfort with — e.g. anxiety, life transitions, relationship conflict, grief. This helps the right people self-select in, and helps people who need a different specialist find that out early.]",
+    "languagesTitle": "Languages",
+    "languagesText": "Sessions available in Albanian and English."
+  },
+  "services": {
+    "title": "Services",
+    "individualTitle": "Individual Therapy",
+    "individualText": "One-on-one sessions focused on what you're carrying — anxiety, stress, relationships, identity, or simply needing space to think out loud.",
+    "individualPrice": "[e.g. €35 per session]",
+    "couplesTitle": "Couples Therapy",
+    "couplesText": "A supported space for two people to understand each other better and work through what's between you.",
+    "couplesPrice": "[e.g. €50 per session]",
+    "durationNote": "Sessions run 50 minutes unless otherwise agreed.",
+    "formatsTitle": "Session Formats",
+    "formatVideo": "Video Call",
+    "formatChat": "Live Chat",
+    "formatAsync": "Messaging",
+    "formatVideoText": "Face-to-face from wherever you are.",
+    "formatChatText": "Real-time text conversation during your session.",
+    "formatAsyncText": "Exchange messages within an agreed window — no need to be online at the same time.",
+    "firstSessionTitle": "Your First Session",
+    "firstSessionText": "There's no need to prepare anything. The first session is about getting to know each other — what brought you here, what you're hoping for, and whether this feels like the right fit for you. You're welcome to share as much or as little as you're comfortable with.",
+    "fitTitle": "Is This Right for You?",
+    "fitGoodForTitle": "This is likely a good fit if you're looking for",
+    "fitGoodFor1": "A confidential space to talk through stress, anxiety, or a difficult period",
+    "fitGoodFor2": "Support navigating a relationship or a major life change",
+    "fitGoodFor3": "Ongoing, regular sessions at a pace that works for you",
+    "fitNotForTitle": "This may not be the right fit if you need",
+    "fitNotFor1": "Emergency or crisis support — please see the FAQ for what to do instead",
+    "fitNotFor2": "Psychiatric medication management (not offered here)",
+    "cancellationTitle": "Cancellation Policy",
+    "cancellationText": "[State the real policy here — e.g. \"Cancellations made at least 24 hours in advance are free of charge. Late cancellations or missed sessions may be charged in full.\"]"
+  },
+  "booking": {
+    "title": "Book a Session",
+    "stepLabel": "Step {current} of {total}",
+    "step1": {
+      "title": "Choose a session type",
+      "individual": "Individual",
+      "couples": "Couples"
+    },
+    "step2": {
+      "title": "Choose a format",
+      "video": "Video Call",
+      "chat": "Live Chat",
+      "async": "Messaging"
+    },
+    "step3": {
+      "title": "Pick a date & time",
+      "noSlots": "No available times on this day — try another."
+    },
+    "step4": {
+      "title": "Your details",
+      "name": "Full name",
+      "email": "Email",
+      "phone": "Phone",
+      "saveInfo": "Save my info for faster booking next time"
+    },
+    "step5": {
+      "title": "Anything you'd like her to know?",
+      "subtitle": "Optional",
+      "placeholder": "e.g. work stress, relationship, anxiety, or just leave blank"
+    },
+    "step6": {
+      "title": "You're booked",
+      "subtitle": "Check your email for the details.",
+      "summaryTitle": "Session summary"
+    },
+    "back": "Back",
+    "next": "Continue",
+    "confirm": "Confirm Booking"
+  },
+  "faqPage": {
+    "title": "Frequently Asked Questions",
+    "q1q": "What happens in the first session?",
+    "q1a": "We'll spend the first session getting to know each other — what brought you here, what you're hoping to work through, and how you like to communicate. There's no pressure to share everything right away.",
+    "q2q": "How much does a session cost?",
+    "q2a": "Individual sessions are [price], and couples sessions are [price]. Payment is currently handled directly — details are shared when you book.",
+    "q3q": "Is what I share confidential?",
+    "q3a": "Yes. Everything discussed in session is kept strictly confidential, with the only exceptions being situations required by law, such as an immediate risk of harm to yourself or someone else.",
+    "q4q": "Can I choose between video, chat, or messaging?",
+    "q4a": "Yes — you choose the format that feels most comfortable when you book, and you're welcome to switch formats between sessions.",
+    "q5q": "What if I need to cancel or reschedule?",
+    "q5a": "Every confirmation email includes a link where you can cancel your session yourself. If you'd like to reschedule instead of cancelling, just book a new time after cancelling the old one.",
+    "q6q": "Do you offer sessions in both Albanian and English?",
+    "q6a": "Yes, sessions are available in both languages — just mention your preference when you book.",
+    "q7q": "How do I know if therapy is right for me?",
+    "q7a": "If you're asking the question, it's usually worth a first session to find out. There's no commitment beyond that — many people book one session just to see how it feels.",
+    "q8q": "What if I'm not sure this is the right fit?",
+    "q8a": "That's completely normal, and it's something we can talk about openly. If another kind of support would serve you better, you'll be told honestly and, where possible, pointed in the right direction.",
+    "crisisNoteTitle": "If you're in crisis",
+    "crisisNoteText": "This site is not for emergencies. If you or someone you know is in immediate danger, please contact your local emergency services right away."
+  },
+  "contactPage": {
+    "title": "Contact",
+    "name": "Name",
+    "email": "Email",
+    "message": "Message",
+    "send": "Send Message"
+  },
+  "legalPage": {
+    "privacyTitle": "Privacy Policy",
+    "termsTitle": "Terms of Use",
+    "placeholder": "[Replace this with your actual policy text before launch.]"
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms"
+  },
+  "theme": {
+    "toggle": "Toggle theme"
+  },
+  "language": {
+    "switch": "Change language"
+  }
+}

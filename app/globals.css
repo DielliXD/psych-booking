@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-linen text-ink dark:bg-charcoalGreen dark:text-mist font-body transition-colors duration-300;
+  font-feature-settings: "ss01" 1, "cv01" 1;
+}
+
+h1, h2, h3, h4 {
+  @apply font-display;
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background-color: rgba(192, 137, 116, 0.25);
+}
+
+/* Visible keyboard focus, always */
+:focus-visible {
+  outline: 2px solid theme("colors.clay");
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "nav": {
+    "home": "Ballina",
+    "about": "Rreth Meje",
+    "services": "Shërbimet",
+    "faq": "Pyetje të Shpeshta",
+    "contact": "Kontakt",
+    "mySessions": "Seancat e Mia",
+    "book": "Rezervo një Seancë"
+  },
+  "home": {
+    "heroTitle": "Një hapësirë e qetë për të punuar me atë që të shqetëson",
+    "heroSubtitle": "Terapi individuale dhe për çifte, në formatin që të përshtatet — video, bisedë ose mesazhe.",
+    "heroCta": "Rezervo një Seancë",
+    "introTitle": "Si funksionon",
+    "introText": "Zgjidh llojin e seancës dhe formatin, cakto një kohë që të përshtatet, dhe je gati. Pa dokumentacion, pa pritje.",
+    "step1Title": "Zgjidh seancën tënde",
+    "step1Text": "Individuale ose për çifte, video-thirrje, bisedë, ose mesazhe — çfarëdo që të përshtatet.",
+    "step2Title": "Zgjidh një kohë",
+    "step2Text": "Shiko disponueshmërinë reale dhe rezervo menjëherë, sipas orës tënde lokale.",
+    "step3Title": "Eja ashtu siç je",
+    "step3Text": "Ndaj aq sa dëshiron paraprakisht. Nuk ka mënyrë të gabuar për të filluar.",
+    "trustTitle": "Pse njerëzit zgjedhin të fillojnë këtu",
+    "trustText": "Të kontaktosh është shpesh pjesa më e vështirë. Gjithçka pas kësaj është ndërtuar të jetë e thjeshtë, private, dhe plotësisht në ritmin tënd.",
+    "trust1Title": "Konfidenciale, gjithmonë",
+    "trust1Text": "Ajo që ndan mbetet mes teje dhe terapistes. Çdo seancë dhe çdo shënim është privat.",
+    "trust2Title": "E licencuar dhe me përvojë",
+    "trust2Text": "Seancat udhëhiqen nga një psikologe e licencuar me përvojë reale klinike, jo nga një chatbot apo skenar.",
+    "trust3Title": "Pa presion, pa detyrim",
+    "trust3Text": "Rezervo një seancë ose disa. Nuk ka paketë për të blerë paraprakisht dhe asnjë detyrim për të vazhduar.",
+    "testimonialTitle": "Çfarë thonë klientët",
+    "testimonialQuote": "[Kur të kesh dëshmi nga klientët — me pëlqimin e tyre — vendos këtu një ose dy citate të shkurtra. Reagimet reale ndërtojnë besim më shpejt se çdo gjë tjetër në këtë faqe.]",
+    "testimonialAttribution": "[Emri i klientit ose inicialet, me pëlqim]",
+    "finalCtaTitle": "Gati të flasësh me dikë?",
+    "finalCtaText": "Hapi i parë është thjesht zgjedhja e një kohe. Gjithçka tjetër mund të presë derisa të jesh gati.",
+    "finalCtaButton": "Rezervo Seancën Tënde të Parë"
+  },
+  "about": {
+    "title": "Rreth Meje",
+    "introText": "Psikologe e licencuar që ofron një hapësirë të ngrohtë, të bazuar në dëshmi, për individë dhe çifte.",
+    "storyTitle": "Historia Ime",
+    "storyText": "[Shkruaj 2-3 paragrafë me zërin e saj: çfarë e tërhoqi drejt psikologjisë, rrugëtimin e saj gjatë kualifikimit, dhe si beson se duhet të ndihet terapia. Kjo është seksioni më i lexuar në faqe për një praktikë individuale — ia vlen të shkruhet me kujdes dhe personalisht, jo të lihet i përgjithshëm.]",
+    "credentialsTitle": "Kualifikimet dhe Përvoja",
+    "approachTitle": "Qasja Ime",
+    "modalitiesTitle": "Metodat që Përdor",
+    "modalitiesText": "[Rendit metodat specifike terapeutike në të cilat është trajnuar — p.sh. Terapia Kognitive-Sjellore (CBT), Terapia e Fokusuar në Emocione (EFT) për çifte, psikodinamike, e qendërzuar te personi — me një shpjegim të thjeshtë për secilën, në mënyrë që klientët e panjohur me termat të kuptojnë çfarë të presin.]",
+    "whoIWorkWithTitle": "Me Kë Punoj Më Mirë",
+    "whoIWorkWithText": "[Përshkruaj llojet e shqetësimeve dhe klientëve me të cilët ka më shumë përvojë dhe rehati — p.sh. ankth, tranzicione jete, konflikte në marrëdhënie, hidhërim. Kjo ndihmon njerëzit e duhur të vetë-identifikohen, dhe ndihmon ata që kanë nevojë për një specialist tjetër ta kuptojnë këtë herët.]",
+    "languagesTitle": "Gjuhët",
+    "languagesText": "Seancat ofrohen në shqip dhe anglisht."
+  },
+  "services": {
+    "title": "Shërbimet",
+    "individualTitle": "Terapi Individuale",
+    "individualText": "Seanca një-me-një të fokusuara në atë që po mbart — ankth, stres, marrëdhënie, identitet, ose thjesht nevojën për hapësirë për të menduar me zë.",
+    "individualPrice": "[p.sh. 35€ për seancë]",
+    "couplesTitle": "Terapi për Çifte",
+    "couplesText": "Një hapësirë e mbështetur për dy persona për të kuptuar njëri-tjetrin më mirë dhe për të punuar me atë që i ndan.",
+    "couplesPrice": "[p.sh. 50€ për seancë]",
+    "durationNote": "Seancat zgjasin 50 minuta, përveçse kur bihet dakord ndryshe.",
+    "formatsTitle": "Formatet e Seancave",
+    "formatVideo": "Video-thirrje",
+    "formatChat": "Bisedë e Drejtpërdrejtë",
+    "formatAsync": "Mesazhe",
+    "formatVideoText": "Sy më sy nga kudo që të jesh.",
+    "formatChatText": "Bisedë me tekst në kohë reale gjatë seancës.",
+    "formatAsyncText": "Shkëmbe mesazhe brenda një afati të caktuar — pa nevojën për të qenë online në të njëjtën kohë.",
+    "firstSessionTitle": "Seanca Jote e Parë",
+    "firstSessionText": "Nuk ka nevojë të përgatitesh për asgjë. Seanca e parë ka të bëjë me njohjen e njëri-tjetrit — çfarë të solli këtu, çfarë shpreson, dhe nëse kjo ndihet si përshtatja e duhur për ty. Je e/i lirë të ndash aq sa je e/i rehatshëm.",
+    "fitTitle": "A Është Kjo e Duhura për Ty?",
+    "fitGoodForTitle": "Kjo ka gjasa të jetë e përshtatshme nëse kërkon",
+    "fitGoodFor1": "Një hapësirë konfidenciale për të folur për stresin, ankthin, ose një periudhë të vështirë",
+    "fitGoodFor2": "Mbështetje për të kaluar një marrëdhënie ose një ndryshim të madh jete",
+    "fitGoodFor3": "Seanca të vazhdueshme, të rregullta, në ritmin që të përshtatet",
+    "fitNotForTitle": "Kjo mund të mos jetë e përshtatshme nëse ke nevojë për",
+    "fitNotFor1": "Ndihmë urgjente ose në krizë — shiko Pyetjet e Shpeshta për çfarë të bësh në vend të kësaj",
+    "fitNotFor2": "Menaxhim të mjekimit psikiatrik (nuk ofrohet këtu)",
+    "cancellationTitle": "Politika e Anulimit",
+    "cancellationText": "[Vendos këtu politikën reale — p.sh. \"Anulimet e bëra të paktën 24 orë përpara janë pa pagesë. Anulimet e vonuara ose seancat e humbura mund të faturohen plotësisht.\"]"
+  },
+  "booking": {
+    "title": "Rezervo një Seancë",
+    "stepLabel": "Hapi {current} nga {total}",
+    "step1": {
+      "title": "Zgjidh llojin e seancës",
+      "individual": "Individuale",
+      "couples": "Për Çifte"
+    },
+    "step2": {
+      "title": "Zgjidh formatin",
+      "video": "Video-thirrje",
+      "chat": "Bisedë e Drejtpërdrejtë",
+      "async": "Mesazhe"
+    },
+    "step3": {
+      "title": "Zgjidh datën dhe orën",
+      "noSlots": "Nuk ka orë të lira në këtë ditë — provo një tjetër."
+    },
+    "step4": {
+      "title": "Të dhënat e tua",
+      "name": "Emri i plotë",
+      "email": "Email",
+      "phone": "Telefoni",
+      "saveInfo": "Ruaj të dhënat e mia për rezervim më të shpejtë herën tjetër"
+    },
+    "step5": {
+      "title": "A ka diçka që dëshiron ta dijë ajo?",
+      "subtitle": "Opsionale",
+      "placeholder": "p.sh. stresi në punë, marrëdhënia, ankthi, ose thjesht lëre bosh"
+    },
+    "step6": {
+      "title": "Je rezervuar",
+      "subtitle": "Kontrollo email-in për detajet.",
+      "summaryTitle": "Përmbledhja e seancës"
+    },
+    "back": "Prapa",
+    "next": "Vazhdo",
+    "confirm": "Konfirmo Rezervimin"
+  },
+  "faqPage": {
+    "title": "Pyetje të Shpeshta",
+    "q1q": "Çfarë ndodh në seancën e parë?",
+    "q1a": "Do ta kalojmë seancën e parë duke u njohur — çfarë të solli këtu, çfarë shpreson të punosh, dhe si preferon të komunikosh. Nuk ka presion për të ndarë gjithçka menjëherë.",
+    "q2q": "Sa kushton një seancë?",
+    "q2a": "Seancat individuale kushtojnë [çmimi], dhe seancat për çifte [çmimi]. Pagesa aktualisht menaxhohet drejtpërdrejt — detajet ndahen kur rezervon.",
+    "q3q": "A është konfidenciale ajo që ndaj?",
+    "q3a": "Po. Gjithçka që diskutohet në seancë mbahet rreptësisht konfidenciale, me përjashtimet e vetme që kërkohen nga ligji, si p.sh. rrezik i menjëhershëm dëmtimi ndaj vetes ose dikujt tjetër.",
+    "q4q": "A mund të zgjedh mes video, bisedë, ose mesazhe?",
+    "q4a": "Po — zgjedh formatin që të duket më i rehatshëm kur rezervon, dhe je e/i lirë të ndryshosh format mes seancave.",
+    "q5q": "Çfarë bëj nëse kam nevojë të anuloj ose riplanifikoj?",
+    "q5a": "Çdo email konfirmimi përfshin një lidhje ku mund ta anulosh vetë seancën. Nëse dëshiron të riplanifikosh në vend të anulimit, thjesht rezervo një kohë të re pasi të anulosh të vjetrën.",
+    "q6q": "A i ofroni seancat në shqip dhe anglisht?",
+    "q6a": "Po, seancat ofrohen në të dyja gjuhët — thjesht përmend preferencën tënde kur rezervon.",
+    "q7q": "Si e di nëse terapia është e duhura për mua?",
+    "q7a": "Nëse po e bën këtë pyetje, zakonisht ia vlen një seancë e parë për ta zbuluar. Nuk ka detyrim përtej kësaj — shumë njerëz rezervojnë një seancë thjesht për të parë si ndihet.",
+    "q8q": "Po nëse nuk jam e/i sigurt që kjo është përshtatja e duhur?",
+    "q8a": "Kjo është plotësisht normale, dhe është diçka për të cilën mund të flasim hapur. Nëse një lloj tjetër mbështetjeje do të të shërbente më mirë, do të informohesh sinqerisht dhe, aty ku është e mundur, do të drejtohesh nga vendi i duhur.",
+    "crisisNoteTitle": "Nëse je në krizë",
+    "crisisNoteText": "Ky sajt nuk është për urgjenca. Nëse ti ose dikush që njeh është në rrezik të menjëhershëm, kontakto shërbimet e urgjencës lokale menjëherë."
+  },
+  "contactPage": {
+    "title": "Kontakt",
+    "name": "Emri",
+    "email": "Email",
+    "message": "Mesazhi",
+    "send": "Dërgo Mesazhin"
+  },
+  "legalPage": {
+    "privacyTitle": "Politika e Privatësisë",
+    "termsTitle": "Kushtet e Përdorimit",
+    "placeholder": "[Zëvendëso këtë me tekstin real të politikës para publikimit.]"
+  },
+  "footer": {
+    "rights": "Të gjitha të drejtat e rezervuara.",
+    "privacy": "Politika e Privatësisë",
+    "terms": "Kushtet e Përdorimit"
+  },
+  "theme": {
+    "toggle": "Ndrysho temën"
+  },
+  "language": {
+    "switch": "Ndrysho gjuhën"
+  }
+}
