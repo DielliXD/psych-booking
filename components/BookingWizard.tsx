@@ -19,6 +19,7 @@ interface BookingData {
   email: string;
   phone: string;
   saveInfo: boolean;
+  consent: boolean;
   note: string;
 }
 
@@ -33,6 +34,7 @@ const initialData: BookingData = {
   email: "",
   phone: "",
   saveInfo: false,
+  consent: false,
   note: "",
 };
 
@@ -58,7 +60,7 @@ export function BookingWizard() {
       case 3:
         return !!data.date && !!data.time;
       case 4:
-        return data.name.trim().length > 0 && /\S+@\S+\.\S+/.test(data.email);
+        return data.name.trim().length > 0 && /\S+@\S+\.\S+/.test(data.email) && data.consent;
       case 5:
         return true;
       default:
@@ -87,6 +89,7 @@ export function BookingWizard() {
         email: data.email,
         phone: data.phone,
         note: data.note,
+        consent: data.consent,
         locale,
       });
 
@@ -428,6 +431,7 @@ function StepDetails({
   update: <K extends keyof BookingData>(key: K, value: BookingData[K]) => void;
 }) {
   const t = useTranslations("booking.step4");
+  const locale = useLocale();
   const inputClass =
     "w-full rounded-xl border-2 border-pine/10 dark:border-sage/10 bg-white/40 dark:bg-white/[0.02] px-4 py-3 text-sm outline-none transition-all duration-200 focus:border-pine dark:focus:border-sage focus:shadow-glow";
   return (
@@ -453,6 +457,29 @@ function StepDetails({
           className="accent-pine dark:accent-sage h-4 w-4"
         />
         {t("saveInfo")}
+      </label>
+      <label className="flex items-start gap-2.5 text-sm text-ink/65 dark:text-mist/65 cursor-pointer leading-relaxed">
+        <input
+          type="checkbox"
+          checked={data.consent}
+          onChange={(e) => update("consent", e.target.checked)}
+          className="accent-pine dark:accent-sage h-4 w-4 mt-1 shrink-0"
+          required
+        />
+        <span>
+          {t.rich("consent", {
+            link: (chunks) => (
+              <a
+                href={`/${locale}/privacy`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-pine dark:text-sage underline underline-offset-2"
+              >
+                {chunks}
+              </a>
+            ),
+          })}
+        </span>
       </label>
     </div>
   );

@@ -7,6 +7,7 @@ export interface CreateBookingInput {
   email: string;
   phone: string;
   note: string;
+  consent: boolean;
   locale: string;
 }
 

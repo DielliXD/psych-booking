@@ -1,11 +1,15 @@
 import { getTranslations } from "next-intl/server";
+import { LegalDocument } from "@/components/LegalDocument";
+import { LAST_UPDATED, legalContent } from "@/content/legal";
 
-export default async function PrivacyPage() {
+export default async function PrivacyPage({ params: { locale } }: { params: { locale: string } }) {
   const t = await getTranslations("legalPage");
-  return (
-    <section className="max-w-2xl mx-auto px-6 lg:px-8 py-24">
-      <h1 className="text-3xl mb-6 text-ink dark:text-mist tracking-tightest">{t("privacyTitle")}</h1>
-      <p className="text-sm leading-relaxed text-ink/55 dark:text-mist/55">{t("placeholder")}</p>
-    </section>
-  );
+  const doc = legalContent.privacy[locale === "en" ? "en" : "sq"];
+  const date = new Date(`${LAST_UPDATED}T12:00:00Z`).toLocaleDateString(locale === "en" ? "en-GB" : "sq-AL", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return <LegalDocument title={t("privacyTitle")} updatedLabel={t("lastUpdated", { date })} doc={doc} />;
 }

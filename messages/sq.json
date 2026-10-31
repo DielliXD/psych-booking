@@ -101,7 +101,8 @@
       "name": "Emri i plotë",
       "email": "Email",
       "phone": "Telefoni",
-      "saveInfo": "Ruaj të dhënat e mia për rezervim më të shpejtë herën tjetër"
+      "saveInfo": "Ruaj të dhënat e mia për rezervim më të shpejtë herën tjetër",
+      "consent": "Kam lexuar <link>Politikën e Privatësisë</link> dhe pajtohem që të dhënat e mia, përfshirë ato për shëndetin, të përpunohen për qëllim të kujdesit psikologjik."
     },
     "step5": {
       "title": "A ka diçka që dëshiron ta dijë ajo?",
@@ -163,7 +164,7 @@
   "legalPage": {
     "privacyTitle": "Politika e Privatësisë",
     "termsTitle": "Kushtet e Përdorimit",
-    "placeholder": "[Zëvendëso këtë me tekstin real të politikës para publikimit.]"
+    "lastUpdated": "Përditësuar më: {date}"
   },
   "footer": {
     "rights": "Të gjitha të drejtat e rezervuara.",

@@ -101,7 +101,8 @@
       "name": "Full name",
       "email": "Email",
       "phone": "Phone",
-      "saveInfo": "Save my info for faster booking next time"
+      "saveInfo": "Save my info for faster booking next time",
+      "consent": "I have read the <link>Privacy Policy</link> and agree to my data, including information about my health, being processed for my psychological care."
     },
     "step5": {
       "title": "Anything you'd like her to know?",
@@ -163,7 +164,7 @@
   "legalPage": {
     "privacyTitle": "Privacy Policy",
     "termsTitle": "Terms of Use",
-    "placeholder": "[Replace this with your actual policy text before launch.]"
+    "lastUpdated": "Last updated: {date}"
   },
   "footer": {
     "rights": "All rights reserved.",

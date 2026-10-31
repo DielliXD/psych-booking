@@ -19,6 +19,10 @@ export async function POST(req: NextRequest) {
     if (!sessionType || !format || !date || !time || !name || !email) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
+    // Health data may only be processed with explicit consent (Law 06/L-082 / GDPR art. 9).
+    if (body.consent !== true) {
+      return NextResponse.json({ error: "Consent is required" }, { status: 400 });
+    }
     if (!["individual", "couples"].includes(sessionType) || !["video", "chat", "async"].includes(format)) {
       return NextResponse.json({ error: "Invalid session type or format" }, { status: 400 });
     }
