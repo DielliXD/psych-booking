@@ -115,7 +115,18 @@
     },
     "back": "Prapa",
     "next": "Vazhdo",
-    "confirm": "Konfirmo Rezervimin"
+    "confirm": "Konfirmo Rezervimin",
+    "summary": "Përmbledhje",
+    "summaryEmpty": "Zgjedhjet e tua do të shfaqen këtu",
+    "slotTaken": "Ky orar sapo u rezervua nga dikush tjetër — të lutem zgjidh një tjetër.",
+    "submitError": "Diçka shkoi keq gjatë rezervimit. Të lutem provo përsëri.",
+    "loginLinkSent": "Të kemi dërguar edhe një lidhje për t’i parë seancat e tua në çdo kohë.",
+    "status": {
+      "pending": "Në pritje",
+      "confirmed": "E konfirmuar",
+      "completed": "E përfunduar",
+      "cancelled": "E anuluar"
+    }
   },
   "faqPage": {
     "title": "Pyetje të Shpeshta",
@@ -164,5 +175,43 @@
   },
   "language": {
     "switch": "Ndrysho gjuhën"
+  },
+  "manage": {
+    "invalidLink": "Kjo lidhje rezervimi nuk është e vlefshme.",
+    "rescheduledTitle": "Seanca u riplanifikua",
+    "rescheduledBody": "Shiko email-in për detajet e përditësuara.",
+    "cancelledTitle": "Rezervimi u anulua",
+    "cancelledBody": "Orari yt u lirua. Mund të rezervosh një kohë të re sa herë të jesh gati.",
+    "title": "Rezervimi yt",
+    "pastSession": "Kjo seancë ka kaluar tashmë.",
+    "reschedule": "Riplanifiko",
+    "cancel": "Anulo",
+    "cancelling": "Duke anuluar...",
+    "messages": "Mesazhet",
+    "noMessages": "Ende nuk ka mesazhe — thuaj një përshëndetje.",
+    "messagePlaceholder": "Shkruaj një mesazh...",
+    "pickNewTime": "Zgjidh një kohë të re",
+    "slotTaken": "Ky orar sapo u zu — zgjidh një tjetër.",
+    "genericError": "Diçka shkoi keq. Të lutem provo përsëri.",
+    "back": "Kthehu",
+    "saving": "Duke ruajtur...",
+    "confirmNewTime": "Konfirmo kohën e re"
+  },
+  "dashboard": {
+    "title": "Seancat e tua",
+    "signOut": "Dil",
+    "upcoming": "Të ardhshme",
+    "past": "Të kaluara",
+    "noUpcoming": "Nuk ke seanca të ardhshme.",
+    "noPast": "Ende nuk ke seanca të kaluara."
+  },
+  "login": {
+    "title": "Shiko seancat e tua",
+    "intro": "Shkruaj email-in me të cilin ke rezervuar — do të të dërgojmë një lidhje për të parë seancat e ardhshme dhe të kaluara.",
+    "expired": "Kjo lidhje ka skaduar ose nuk është e vlefshme. Kërko një të re më poshtë.",
+    "sent": "Nëse ky email ka rezervuar më parë, lidhja e hyrjes po vjen.",
+    "emailPlaceholder": "ti@shembull.com",
+    "sending": "Duke dërguar...",
+    "send": "Dërgo lidhjen e hyrjes"
   }
 }

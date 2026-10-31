@@ -115,7 +115,18 @@
     },
     "back": "Back",
     "next": "Continue",
-    "confirm": "Confirm Booking"
+    "confirm": "Confirm Booking",
+    "summary": "Summary",
+    "summaryEmpty": "Your selections will appear here",
+    "slotTaken": "That time was just booked by someone else — please pick another.",
+    "submitError": "Something went wrong submitting your booking. Please try again.",
+    "loginLinkSent": "We've also sent you a link to view your sessions anytime.",
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    }
   },
   "faqPage": {
     "title": "Frequently Asked Questions",
@@ -164,5 +175,43 @@
   },
   "language": {
     "switch": "Change language"
+  },
+  "manage": {
+    "invalidLink": "This booking link isn't valid.",
+    "rescheduledTitle": "Session rescheduled",
+    "rescheduledBody": "Check your email for the updated details.",
+    "cancelledTitle": "Booking cancelled",
+    "cancelledBody": "Your slot has been freed up. Feel free to book a new time whenever you're ready.",
+    "title": "Your booking",
+    "pastSession": "This session has already passed.",
+    "reschedule": "Reschedule",
+    "cancel": "Cancel",
+    "cancelling": "Cancelling...",
+    "messages": "Messages",
+    "noMessages": "No messages yet — say hello.",
+    "messagePlaceholder": "Type a message...",
+    "pickNewTime": "Pick a new time",
+    "slotTaken": "That time was just taken — pick another.",
+    "genericError": "Something went wrong. Please try again.",
+    "back": "Back",
+    "saving": "Saving...",
+    "confirmNewTime": "Confirm new time"
+  },
+  "dashboard": {
+    "title": "Your sessions",
+    "signOut": "Sign out",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "noUpcoming": "No upcoming sessions.",
+    "noPast": "No past sessions yet."
+  },
+  "login": {
+    "title": "View your sessions",
+    "intro": "Enter the email you used to book — we'll send you a link to view your upcoming and past sessions.",
+    "expired": "That link has expired or isn't valid. Request a new one below.",
+    "sent": "If that email has booked with us before, a login link is on its way.",
+    "emailPlaceholder": "you@example.com",
+    "sending": "Sending...",
+    "send": "Send login link"
   }
 }

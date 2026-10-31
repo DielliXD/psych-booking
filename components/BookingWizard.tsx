@@ -38,6 +38,8 @@ const initialData: BookingData = {
 
 export function BookingWizard() {
   const t = useTranslations("booking");
+  const tTypes = useTranslations("booking.step1");
+  const tFormats = useTranslations("booking.step2");
   const locale = useLocale();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<BookingData>(initialData);
@@ -99,10 +101,10 @@ export function BookingWizard() {
       setStep(6);
     } catch (err: any) {
       if (err?.message === "SLOT_TAKEN") {
-        setError("That time was just booked by someone else — please pick another.");
+        setError(t("slotTaken"));
         setStep(3);
       } else {
-        setError("Something went wrong submitting your booking. Please try again.");
+        setError(t("submitError"));
       }
     } finally {
       setSubmitting(false);
@@ -173,17 +175,17 @@ export function BookingWizard() {
 
         {step < 6 && (
           <aside className="h-fit rounded-3xl border border-pine/10 dark:border-sage/10 bg-white/40 dark:bg-white/[0.02] shadow-soft p-6 text-sm space-y-3 text-ink/70 dark:text-mist/70">
-            <p className="text-xs font-medium tracking-widest uppercase text-clay mb-1">Summary</p>
+            <p className="text-xs font-medium tracking-widest uppercase text-clay mb-1">{t("summary")}</p>
             {!data.sessionType && !data.format && !data.date && (
-              <p className="text-ink/35 dark:text-mist/35 italic">Your selections will appear here</p>
+              <p className="text-ink/35 dark:text-mist/35 italic">{t("summaryEmpty")}</p>
             )}
             {data.sessionType && (
-              <SummaryRow icon={data.sessionType === "individual" ? User : Users} label={data.sessionType} />
+              <SummaryRow icon={data.sessionType === "individual" ? User : Users} label={tTypes(data.sessionType)} />
             )}
             {data.format && (
               <SummaryRow
                 icon={data.format === "video" ? Video : data.format === "chat" ? MessageCircle : Mail}
-                label={data.format}
+                label={tFormats(data.format)}
               />
             )}
             {data.date && data.time && (
@@ -200,7 +202,7 @@ export function BookingWizard() {
 
 function SummaryRow({ icon: Icon, label }: { icon: any; label: string }) {
   return (
-    <p className="flex items-center gap-2.5 capitalize">
+    <p className="flex items-center gap-2.5">
       <Icon size={15} className="text-clay shrink-0" />
       {label}
     </p>
@@ -480,6 +482,9 @@ function StepNote({
 
 function StepConfirmation({ data }: { data: BookingData }) {
   const t = useTranslations("booking.step6");
+  const tBooking = useTranslations("booking");
+  const tTypes = useTranslations("booking.step1");
+  const tFormats = useTranslations("booking.step2");
   return (
     <div className="text-center py-14 animate-fadeUp">
       <div className="mx-auto mb-7 w-16 h-16 rounded-full bg-gradient-to-br from-pine to-pine/70 dark:from-sage dark:to-sage/70 shadow-lifted flex items-center justify-center">
@@ -489,14 +494,14 @@ function StepConfirmation({ data }: { data: BookingData }) {
       <p className="text-sm text-ink/55 dark:text-mist/55 mb-10">{t("subtitle")}</p>
       {data.saveInfo && (
         <p className="text-xs text-ink/45 dark:text-mist/45 mb-6 -mt-6">
-          We've also sent you a link to view your sessions anytime.
+          {tBooking("loginLinkSent")}
         </p>
       )}
 
       <div className="max-w-sm mx-auto text-left rounded-3xl border border-pine/10 dark:border-sage/10 bg-white/40 dark:bg-white/[0.02] shadow-soft p-6 text-sm space-y-2 text-ink/70 dark:text-mist/70">
         <p className="text-xs font-medium tracking-widest uppercase text-clay mb-2">{t("summaryTitle")}</p>
-        <p className="capitalize font-medium text-ink dark:text-mist">{data.sessionType}</p>
-        <p className="capitalize">{data.format}</p>
+        <p className="font-medium text-ink dark:text-mist">{data.sessionType && tTypes(data.sessionType)}</p>
+        <p>{data.format && tFormats(data.format)}</p>
         <p>
           {data.date} · {data.time}
         </p>
