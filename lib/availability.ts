@@ -25,6 +25,15 @@ function toTimeSlots(startTime: string, endTime: string): string[] {
   return slots;
 }
 
+function checkConfig() {
+  // Make missing .env.local values obvious in the terminal instead of
+  // silently showing "no available times".
+  const missing = ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_PSYCHOLOGIST_ID"].filter(
+    (name) => !process.env[name]
+  );
+  if (missing.length) throw new Error(`Missing env vars in .env.local: ${missing.join(", ")}`);
+}
+
 /**
  * Open slots ("HH:mm", clinic time) for a calendar date ("YYYY-MM-DD", clinic time):
  * 1. Outside the booking window → []
@@ -39,25 +48,28 @@ export async function getAvailableSlots(
   options: { ignoreBookingId?: string } = {}
 ): Promise<string[]> {
   if (!DATE_RE.test(date)) return [];
+  checkConfig();
 
   const today = todayInClinic();
   if (date < today || date > addDays(today, BOOKING_WINDOW_DAYS)) return [];
 
-  const { data: exception } = await supabaseAdmin
+  const { data: exception, error: exceptionError } = await supabaseAdmin
     .from("availability_exceptions")
     .select("id")
     .eq("psychologist_id", PSYCHOLOGIST_ID)
     .eq("date", date)
     .limit(1)
     .maybeSingle();
+  if (exceptionError) throw new Error(`availability_exceptions query failed: ${exceptionError.message}`);
   if (exception) return [];
 
   // A day can have several rules (e.g. 09–12 and 15–19), so don't use maybeSingle().
-  const { data: rules } = await supabaseAdmin
+  const { data: rules, error: rulesError } = await supabaseAdmin
     .from("availability_rules")
     .select("start_time, end_time")
     .eq("psychologist_id", PSYCHOLOGIST_ID)
     .eq("day_of_week", dayOfWeek(date));
+  if (rulesError) throw new Error(`availability_rules query failed: ${rulesError.message}`);
   if (!rules || rules.length === 0) return [];
 
   const allSlots = Array.from(new Set(rules.flatMap((r) => toTimeSlots(r.start_time, r.end_time)))).sort();
@@ -74,7 +86,8 @@ export async function getAvailableSlots(
     .gte("scheduled_at", dayStart)
     .lt("scheduled_at", dayEnd);
   if (options.ignoreBookingId) query = query.neq("id", options.ignoreBookingId);
-  const { data: existingBookings } = await query;
+  const { data: existingBookings, error: bookingsError } = await query;
+  if (bookingsError) throw new Error(`bookings query failed: ${bookingsError.message}`);
 
   const taken = new Set((existingBookings ?? []).map((b) => new Date(b.scheduled_at).getTime()));
   const earliest = Date.now() + MIN_NOTICE_MS;

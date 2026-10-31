@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { sendEmail } from "@/lib/mailer";
 import { buildNewMessageEmail } from "@/lib/email";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { requireAdmin } from "@/lib/requireAdmin";
 
 // Called from the admin panel after she sends a chat message, to email
 // the patient so they know to come check it (messages are polling-based,
 // not push notifications, so without this the patient would never know).
+// Admin-only: without this check anyone could send a patient an email that
+// looks like it came from their therapist.
 export async function POST(req: NextRequest) {
+  if (!(await requireAdmin(req))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { bookingId, messagePreview } = await req.json();
     if (!bookingId || !messagePreview) {
@@ -35,9 +40,8 @@ export async function POST(req: NextRequest) {
       isForAdmin: false,
     });
 
-    await resend.emails.send({
-      from: process.env.BOOKING_FROM_EMAIL ?? "onboarding@resend.dev",
-      to: patient.email,
+    await sendEmail({
+        to: patient.email,
       subject,
       html,
     });

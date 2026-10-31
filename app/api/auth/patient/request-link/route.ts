@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmail } from "@/lib/mailer";
+import { escapeHtml } from "@/lib/escapeHtml";
 
 const copy = {
   en: {
@@ -60,16 +59,15 @@ export async function POST(req: NextRequest) {
 
     const html = `
       <div style="font-family: sans-serif; max-width: 480px; margin: auto; color: #23302B;">
-        <p>${t.greeting(patient.name)}</p>
+        <p>${t.greeting(escapeHtml(patient.name))}</p>
         <p>${t.body}</p>
         <p style="margin: 24px 0;"><a href="${loginUrl}" style="background:#2F4F44;color:#fff;padding:12px 24px;border-radius:999px;text-decoration:none;">${t.button}</a></p>
         <p style="color: #999; font-size: 13px;">${t.expiry}</p>
       </div>
     `;
 
-    await resend.emails.send({
-      from: process.env.BOOKING_FROM_EMAIL ?? "onboarding@resend.dev",
-      to: patient.email,
+    await sendEmail({
+        to: patient.email,
       subject: t.subject,
       html,
     });

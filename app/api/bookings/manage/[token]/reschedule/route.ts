@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { sendEmail } from "@/lib/mailer";
 import { buildConfirmationEmail } from "@/lib/email";
 import { isSlotAvailable } from "@/lib/availability";
 import { clinicTimeToUtc, DATE_RE, TIME_RE } from "@/lib/timezone";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
   try {
@@ -73,9 +71,8 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
           meetingLink: booking.meeting_link,
           manageUrl,
         });
-        await resend.emails.send({
-          from: process.env.BOOKING_FROM_EMAIL ?? "onboarding@resend.dev",
-          to: patient.email,
+        await sendEmail({
+        to: patient.email,
           subject: `Updated: ${subject}`,
           html,
         });

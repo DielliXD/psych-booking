@@ -76,7 +76,7 @@ export function BookingWizard() {
     setSubmitting(true);
     setError(null);
     try {
-      const booking = await createBooking({
+      await createBooking({
         sessionType: data.sessionType,
         format: data.format,
         date: data.date,
@@ -87,12 +87,6 @@ export function BookingWizard() {
         note: data.note,
         locale,
       });
-
-      fetch("/api/bookings/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId: booking.id, locale }),
-      }).catch((err) => console.error("Confirmation email failed to send:", err));
 
       if (data.saveInfo) {
         fetch("/api/auth/patient/request-link", {

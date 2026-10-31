@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { formatClinicDateTime } from "@/lib/timezone";
+import { adminFetch } from "@/lib/adminFetch";
 import { NotebookPen, ChevronDown, MessageSquare, Send } from "lucide-react";
 
 interface BookingRow {
@@ -234,9 +235,8 @@ function AdminMessageThread({ bookingId }: { bookingId: string }) {
     if (!draft.trim()) return;
     setSending(true);
     await supabase.from("messages").insert({ booking_id: bookingId, sender: "psychologist", content: draft.trim() });
-    fetch("/api/bookings/notify-patient-message", {
+    adminFetch("/api/bookings/notify-patient-message", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ bookingId, messagePreview: draft.trim() }),
     }).catch((err) => console.error("Failed to notify patient:", err));
     setDraft("");

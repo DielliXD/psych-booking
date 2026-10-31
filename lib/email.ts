@@ -1,4 +1,5 @@
 import { formatClinicDateTime } from "./timezone";
+import { escapeHtml } from "./escapeHtml";
 
 interface BookingEmailData {
   name: string;
@@ -42,6 +43,12 @@ const copy = {
 
 export function buildConfirmationEmail(locale: "en" | "sq", data: BookingEmailData) {
   const t = copy[locale] ?? copy.en;
+  data = {
+    ...data,
+    name: escapeHtml(data.name),
+    meetingLink: data.meetingLink ? escapeHtml(data.meetingLink) : null,
+    manageUrl: escapeHtml(data.manageUrl),
+  };
   const when = formatClinicDateTime(data.scheduledAt, locale, { dateStyle: "full", timeStyle: "short" });
 
   const html = `
@@ -93,6 +100,7 @@ export function buildReminderEmail(
   data: { name: string; format: "video" | "chat" | "async"; scheduledAt: string; meetingLink?: string | null }
 ) {
   const t = reminderCopy[locale] ?? reminderCopy.en;
+  data = { ...data, name: escapeHtml(data.name), meetingLink: data.meetingLink ? escapeHtml(data.meetingLink) : null };
   const formatLabels = locale === "sq"
     ? { video: "Video-thirrje", chat: "Bisedë e Drejtpërdrejtë", async: "Mesazhe" }
     : { video: "Video Call", chat: "Live Chat", async: "Messaging" };
@@ -137,6 +145,7 @@ const cancellationCopy = {
 
 export function buildCancellationEmail(locale: "en" | "sq", data: { name: string; scheduledAt: string }) {
   const t = cancellationCopy[locale] ?? cancellationCopy.en;
+  data = { ...data, name: escapeHtml(data.name) };
   const when = formatClinicDateTime(data.scheduledAt, locale, { dateStyle: "full", timeStyle: "short" });
 
   const html = `
@@ -175,6 +184,14 @@ export function buildNewMessageEmail(
   data: { recipientName: string; messagePreview: string; link: string; isForAdmin: boolean; patientName?: string }
 ) {
   const t = newMessageCopy[locale] ?? newMessageCopy.en;
+  data = {
+    ...data,
+    recipientName: escapeHtml(data.recipientName),
+    // escape first, then keep the patient's line breaks readable
+    messagePreview: escapeHtml(data.messagePreview).replace(/\n/g, "<br>"),
+    link: escapeHtml(data.link),
+    patientName: escapeHtml(data.patientName),
+  };
   const body = data.isForAdmin ? t.bodyToAdmin(data.patientName ?? "") : t.bodyToPatient;
 
   const html = `

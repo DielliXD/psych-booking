@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { sendEmail } from "@/lib/mailer";
 import { buildNewMessageEmail } from "@/lib/email";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const PSYCHOLOGIST_ID = process.env.NEXT_PUBLIC_PSYCHOLOGIST_ID ?? "";
 
 async function getBooking(token: string) {
@@ -63,8 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
         isForAdmin: true,
         patientName: patient?.name,
       });
-      await resend.emails.send({
-        from: process.env.BOOKING_FROM_EMAIL ?? "onboarding@resend.dev",
+      await sendEmail({
         to: psychologist.notification_email,
         subject,
         html,

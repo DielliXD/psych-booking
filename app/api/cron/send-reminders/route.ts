@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { sendEmail } from "@/lib/mailer";
 import { buildReminderEmail } from "@/lib/email";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Called on a schedule (e.g. Vercel Cron, once an hour) to send a reminder
 // email to anyone whose confirmed session is ~24 hours away. Protected by
@@ -44,12 +42,13 @@ export async function GET(req: NextRequest) {
         meetingLink: booking.meeting_link,
       });
 
-      await resend.emails.send({
-        from: process.env.BOOKING_FROM_EMAIL ?? "onboarding@resend.dev",
+      const delivered = await sendEmail({
         to: patient.email,
         subject,
         html,
       });
+
+      if (!delivered) continue; // email not configured — try again next run
 
       await supabaseAdmin
         .from("bookings")

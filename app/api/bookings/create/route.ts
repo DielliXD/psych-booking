@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { isSlotAvailable } from "@/lib/availability";
+import { sendBookingConfirmation } from "@/lib/notifications";
 import { clinicTimeToUtc, DATE_RE, TIME_RE } from "@/lib/timezone";
 
 const PSYCHOLOGIST_ID = process.env.NEXT_PUBLIC_PSYCHOLOGIST_ID ?? "";
@@ -77,7 +78,17 @@ export async function POST(req: NextRequest) {
       throw bookingError;
     }
 
-    return NextResponse.json({ booking });
+    // Confirmation email is sent here, server-side, instead of the browser
+    // calling a separate public endpoint. A failed email must not fail the booking.
+    try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? req.nextUrl.origin;
+      await sendBookingConfirmation(booking.id, siteUrl);
+    } catch (emailErr) {
+      console.error("Booking saved, but confirmation email failed:", emailErr);
+    }
+
+    // Only return what the booking page needs — not the private cancel_token etc.
+    return NextResponse.json({ booking: { id: booking.id } });
   } catch (err) {
     console.error("Booking creation failed:", err);
     return NextResponse.json({ error: "Failed to create booking" }, { status: 500 });
