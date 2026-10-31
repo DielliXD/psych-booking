@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { formatClinicDateTime } from "@/lib/timezone";
 import { adminFetch } from "@/lib/adminFetch";
-import { NotebookPen, ChevronDown, MessageSquare, Send } from "lucide-react";
+import { NotebookPen, ChevronDown, MessageSquare, Send, XCircle, CheckCircle2, MailCheck } from "lucide-react";
 
 interface BookingRow {
   id: string;
@@ -64,6 +64,10 @@ export default function AdminBookingsPage() {
     setSessionNotes((prev) => ({ ...prev, [bookingId]: text }));
   }
 
+  function handleStatusChanged(bookingId: string, status: string) {
+    setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status } : b)));
+  }
+
   if (loading) return <p className="text-sm text-ink/50 dark:text-mist/50">Loading...</p>;
 
   const now = new Date();
@@ -78,6 +82,7 @@ export default function AdminBookingsPage() {
         emptyText="No upcoming sessions."
         sessionNotes={sessionNotes}
         onSaveNote={saveSessionNote}
+        onStatusChanged={handleStatusChanged}
       />
       <BookingGroup
         title="Past"
@@ -85,6 +90,7 @@ export default function AdminBookingsPage() {
         emptyText="No past sessions yet."
         sessionNotes={sessionNotes}
         onSaveNote={saveSessionNote}
+        onStatusChanged={handleStatusChanged}
       />
     </div>
   );
@@ -96,12 +102,14 @@ function BookingGroup({
   emptyText,
   sessionNotes,
   onSaveNote,
+  onStatusChanged,
 }: {
   title: string;
   bookings: BookingRow[];
   emptyText: string;
   sessionNotes: Record<string, string>;
   onSaveNote: (bookingId: string, text: string) => Promise<void>;
+  onStatusChanged: (bookingId: string, status: string) => void;
 }) {
   return (
     <section>
@@ -109,7 +117,13 @@ function BookingGroup({
       {bookings.length === 0 && <p className="text-sm text-ink/50 dark:text-mist/50">{emptyText}</p>}
       <div className="space-y-3">
         {bookings.map((b) => (
-          <BookingCard key={b.id} booking={b} existingNote={sessionNotes[b.id] ?? ""} onSaveNote={onSaveNote} />
+          <BookingCard
+            key={b.id}
+            booking={b}
+            existingNote={sessionNotes[b.id] ?? ""}
+            onSaveNote={onSaveNote}
+            onStatusChanged={onStatusChanged}
+          />
         ))}
       </div>
     </section>
@@ -120,10 +134,12 @@ function BookingCard({
   booking: b,
   existingNote,
   onSaveNote,
+  onStatusChanged,
 }: {
   booking: BookingRow;
   existingNote: string;
   onSaveNote: (bookingId: string, text: string) => Promise<void>;
+  onStatusChanged: (bookingId: string, status: string) => void;
 }) {
   const [noteOpen, setNoteOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -148,8 +164,11 @@ function BookingCard({
         <span className="font-medium text-ink dark:text-mist">{patient?.name}</span>
         <span className="text-xs text-ink/50 dark:text-mist/50">{when}</span>
       </div>
-      <p className="text-ink/60 dark:text-mist/60 capitalize">
-        {b.session_type} · {b.format} · {b.status}
+      <p className="text-ink/60 dark:text-mist/60 capitalize flex items-center gap-2 flex-wrap">
+        <span>
+          {b.session_type} · {b.format}
+        </span>
+        <StatusBadge status={b.status} />
       </p>
       <p className="text-ink/50 dark:text-mist/50 text-xs mt-1">
         {patient?.email} {patient?.phone ? `· ${patient.phone}` : ""}
@@ -157,6 +176,8 @@ function BookingCard({
       {b.note && (
         <p className="mt-2 text-ink/70 dark:text-mist/70 italic border-l-2 border-clay/40 pl-3">"{b.note}"</p>
       )}
+
+      <BookingActions booking={b} onStatusChanged={onStatusChanged} />
 
       <button
         onClick={() => setNoteOpen(!noteOpen)}
@@ -278,6 +299,135 @@ function AdminMessageThread({ bookingId }: { bookingId: string }) {
           <Send size={12} />
         </button>
       </div>
+    </div>
+  );
+}
+
+const STATUS_STYLES: Record<string, string> = {
+  confirmed: "bg-pine/10 text-pine dark:bg-sage/15 dark:text-sage",
+  completed: "bg-ink/5 text-ink/60 dark:bg-mist/10 dark:text-mist/60",
+  cancelled: "bg-clay/10 text-clay",
+  pending: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+};
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium normal-case ${STATUS_STYLES[status] ?? STATUS_STYLES.pending}`}>
+      {status}
+    </span>
+  );
+}
+
+// Cancel / mark completed / resend confirmation. Cancelling asks for a second
+// click instead of a browser confirm() dialog.
+function BookingActions({
+  booking: b,
+  onStatusChanged,
+}: {
+  booking: BookingRow;
+  onStatusChanged: (bookingId: string, status: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
+
+  const isFuture = new Date(b.scheduled_at) > new Date();
+  if (b.status === "cancelled") return null;
+
+  async function changeStatus(status: "cancelled" | "completed") {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const res = await adminFetch(`/api/admin/bookings/${b.id}/status`, {
+        method: "POST",
+        body: JSON.stringify({ status }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage({ text: json.error ?? "Something went wrong.", error: true });
+        return;
+      }
+      onStatusChanged(b.id, status);
+      if (status === "cancelled") {
+        setMessage({ text: json.patientNotified ? "Cancelled — patient notified by email." : "Cancelled (no email was sent)." });
+      }
+    } finally {
+      setBusy(false);
+      setConfirmingCancel(false);
+    }
+  }
+
+  async function resendConfirmation() {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const res = await adminFetch("/api/bookings/confirm", {
+        method: "POST",
+        body: JSON.stringify({ bookingId: b.id }),
+      });
+      setMessage(res.ok ? { text: "Confirmation email sent." } : { text: "Couldn't send the email.", error: true });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const btn =
+    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors disabled:opacity-50";
+
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2">
+      {b.status === "confirmed" && !isFuture && (
+        <button
+          onClick={() => changeStatus("completed")}
+          disabled={busy}
+          className={`${btn} border-pine/20 text-pine hover:bg-pine/5 dark:border-sage/20 dark:text-sage dark:hover:bg-sage/10`}
+        >
+          <CheckCircle2 size={13} /> Mark completed
+        </button>
+      )}
+
+      {b.status === "confirmed" && isFuture && (
+        <button
+          onClick={resendConfirmation}
+          disabled={busy}
+          className={`${btn} border-pine/20 text-pine hover:bg-pine/5 dark:border-sage/20 dark:text-sage dark:hover:bg-sage/10`}
+        >
+          <MailCheck size={13} /> Resend confirmation
+        </button>
+      )}
+
+      {isFuture &&
+        (confirmingCancel ? (
+          <>
+            <span className="text-xs text-clay">Cancel this session and email the patient?</span>
+            <button
+              onClick={() => changeStatus("cancelled")}
+              disabled={busy}
+              className={`${btn} border-clay bg-clay text-white hover:opacity-90`}
+            >
+              {busy ? "Cancelling..." : "Yes, cancel"}
+            </button>
+            <button
+              onClick={() => setConfirmingCancel(false)}
+              disabled={busy}
+              className={`${btn} border-transparent text-ink/50 dark:text-mist/50 hover:text-ink dark:hover:text-mist`}
+            >
+              Keep it
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => setConfirmingCancel(true)}
+            disabled={busy}
+            className={`${btn} border-clay/30 text-clay hover:bg-clay/5`}
+          >
+            <XCircle size={13} /> Cancel session
+          </button>
+        ))}
+
+      {message && (
+        <span className={`text-xs ${message.error ? "text-clay" : "text-pine dark:text-sage"}`}>{message.text}</span>
+      )}
     </div>
   );
 }
