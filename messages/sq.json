@@ -143,7 +143,11 @@
     "name": "Emri",
     "email": "Email",
     "message": "Mesazhi",
-    "send": "Dërgo Mesazhin"
+    "send": "Dërgo Mesazhin",
+    "sending": "Duke dërguar...",
+    "sent": "Faleminderit — mesazhi yt u dërgua. Do të marrësh përgjigje me email.",
+    "error": "Diçka shkoi keq gjatë dërgimit. Provo përsëri, ose dërgo email direkt.",
+    "tooMany": "Ke dërguar shumë mesazhe. Provo përsëri pas pak."
   },
   "legalPage": {
     "privacyTitle": "Politika e Privatësisë",

@@ -10,14 +10,20 @@ let client: Resend | null = null;
 const FROM = process.env.BOOKING_FROM_EMAIL ?? "onboarding@resend.dev";
 
 /** Returns true if the email was sent, false if skipped because email isn't configured. */
-export async function sendEmail(message: { to: string; subject: string; html: string }): Promise<boolean> {
+export async function sendEmail(message: {
+  to: string;
+  subject: string;
+  html: string;
+  replyTo?: string;
+}): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     console.warn(`[email skipped] RESEND_API_KEY is not set in .env.local — "${message.subject}" was not sent.`);
     return false;
   }
   client ??= new Resend(key);
-  const { error } = await client.emails.send({ from: FROM, ...message });
+  const { replyTo, ...rest } = message;
+  const { error } = await client.emails.send({ from: FROM, ...rest, ...(replyTo ? { reply_to: replyTo } : {}) });
   if (error) throw new Error(`Resend error: ${error.message}`);
   return true;
 }
