@@ -3,15 +3,27 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { isSlotAvailable } from "@/lib/availability";
 import { sendBookingConfirmation } from "@/lib/notifications";
 import { clinicTimeToUtc, DATE_RE, TIME_RE } from "@/lib/timezone";
+import { EMAIL_RE, normalizeEmail } from "@/lib/patientAuth";
 
 const PSYCHOLOGIST_ID = process.env.NEXT_PUBLIC_PSYCHOLOGIST_ID ?? "";
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionType, format, date, time, name, email, phone, note, locale } = await req.json();
+    const body = await req.json();
+    const { sessionType, format, date, time, locale } = body;
+    const name = String(body.name ?? "").trim();
+    const email = normalizeEmail(body.email);
+    const phone = String(body.phone ?? "").trim() || null;
+    const note = String(body.note ?? "").trim();
 
     if (!sessionType || !format || !date || !time || !name || !email) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+    if (!["individual", "couples"].includes(sessionType) || !["video", "chat", "async"].includes(format)) {
+      return NextResponse.json({ error: "Invalid session type or format" }, { status: 400 });
+    }
+    if (!EMAIL_RE.test(email) || name.length > 100 || email.length > 200 || note.length > 2000) {
+      return NextResponse.json({ error: "Invalid details" }, { status: 400 });
     }
 
     if (!DATE_RE.test(date) || !TIME_RE.test(time)) {
@@ -23,12 +35,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "SLOT_TAKEN" }, { status: 409 });
     }
 
-    // Find or create the patient by email
-    const { data: existingPatient } = await supabaseAdmin
-      .from("patients")
-      .select("id")
-      .eq("email", email)
-      .maybeSingle();
+    // Find or create the patient by (lowercased) email — one patient per email.
+    const findPatient = () => supabaseAdmin.from("patients").select("id").eq("email", email).maybeSingle();
+    const { data: existingPatient, error: findError } = await findPatient();
+    if (findError) throw findError;
 
     let patientId = existingPatient?.id;
 
@@ -38,8 +48,16 @@ export async function POST(req: NextRequest) {
         .insert({ name, email, phone })
         .select("id")
         .single();
-      if (patientError) throw patientError;
-      patientId = newPatient.id;
+      if (patientError?.code === "23505") {
+        // Same email booked at the same moment in another request — use that row.
+        const { data: raced } = await findPatient();
+        patientId = raced?.id;
+      } else if (patientError) {
+        throw patientError;
+      } else {
+        patientId = newPatient.id;
+      }
+      if (!patientId) throw new Error("Could not create or find patient");
     }
 
     // date/time are clinic time (e.g. Kosovo), not server time (UTC on Vercel)

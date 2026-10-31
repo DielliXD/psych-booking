@@ -4,6 +4,7 @@ import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { formatClinicDateTime } from "@/lib/timezone";
 import { getTranslations } from "next-intl/server";
+import { SESSION_COOKIE, UUID_RE } from "@/lib/patientAuth";
 
 interface BookingRow {
   id: string;
@@ -15,8 +16,8 @@ interface BookingRow {
 }
 
 export default async function DashboardPage({ params: { locale } }: { params: { locale: string } }) {
-  const sessionId = cookies().get("patient_session")?.value;
-  if (!sessionId) redirect(`/${locale}/login`);
+  const sessionId = cookies().get(SESSION_COOKIE)?.value;
+  if (!sessionId || !UUID_RE.test(sessionId)) redirect(`/${locale}/login`);
 
   const { data: session } = await supabaseAdmin
     .from("patient_sessions")

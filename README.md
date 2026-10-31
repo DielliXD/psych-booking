@@ -95,6 +95,7 @@ version of this project:
 5. `supabase/migration_005_patient_accounts.sql`
 6. `supabase/migration_006_messages_rls.sql`
 7. `supabase/migration_007_message_notifications.sql`
+8. `supabase/migration_008_patient_auth.sql`
 
 Fresh setups should just use `schema.sql` — it already includes everything,
 skip the migration files entirely.

@@ -94,6 +94,22 @@ create table patient_sessions (
 alter table patient_sessions enable row level security;
 -- No policies at all on purpose — only ever touched via the service role key.
 
+-- One patient per email, case-insensitive. The app always stores emails lowercased.
+create unique index patients_email_unique on patients (lower(email));
+
+-- Single-use, short-lived (1 hour) links emailed to patients. Clicking one
+-- marks it used and creates a 30-day patient_sessions row (the cookie).
+-- Keeping the two separate means a forwarded or leaked email link can't be
+-- reused, and logging out really ends the session.
+create table patient_login_tokens (
+  id uuid primary key default gen_random_uuid(),
+  patient_id uuid not null references patients(id) on delete cascade,
+  expires_at timestamptz not null,
+  used_at timestamptz,
+  created_at timestamptz default now()
+);
+alter table patient_login_tokens enable row level security;
+
 -- Row Level Security.
 -- Booking creation happens server-side via the service role key (which
 -- bypasses RLS entirely), so `bookings` and `patients` need NO public
