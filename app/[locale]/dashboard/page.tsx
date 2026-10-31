@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { formatClinicDateTime } from "@/lib/timezone";
 
 interface BookingRow {
   id: string;
@@ -81,10 +82,7 @@ function BookingGroup({
       {bookings.length === 0 && <p className="text-sm text-ink/50 dark:text-mist/50">{emptyText}</p>}
       <div className="space-y-3">
         {bookings.map((b) => {
-          const when = new Date(b.scheduled_at).toLocaleString(undefined, {
-            dateStyle: "medium",
-            timeStyle: "short",
-          });
+          const when = formatClinicDateTime(b.scheduled_at, locale);
           return (
             <Link
               key={b.id}

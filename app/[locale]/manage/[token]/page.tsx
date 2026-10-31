@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import { useLocale } from "next-intl";
 import { Check, X, CalendarClock, Send } from "lucide-react";
-import { getAvailableSlots } from "@/lib/availability";
+import { fetchAvailableSlots } from "@/lib/availabilityClient";
+import { addDays, formatClinicDateTime, formatDateLabel, todayInClinic } from "@/lib/timezone";
 
 interface BookingDetail {
   id: string;
@@ -17,6 +19,7 @@ interface BookingDetail {
 
 export default function ManageBookingPage() {
   const { token } = useParams<{ token: string }>();
+  const locale = useLocale();
   const [booking, setBooking] = useState<BookingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -63,10 +66,7 @@ export default function ManageBookingPage() {
   }
 
   const patient = Array.isArray(booking.patients) ? booking.patients[0] : booking.patients;
-  const when = new Date(booking.scheduled_at).toLocaleString(undefined, {
-    dateStyle: "full",
-    timeStyle: "short",
-  });
+  const when = formatClinicDateTime(booking.scheduled_at, locale, { dateStyle: "full", timeStyle: "short" });
   const isPast = new Date(booking.scheduled_at) < new Date();
   const isCancelled = cancelled || booking.status === "cancelled";
 
@@ -234,6 +234,7 @@ function RescheduleForm({
   onDone: () => void;
   onBack: () => void;
 }) {
+  const locale = useLocale();
   const [date, setDate] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [slots, setSlots] = useState<string[]>([]);
@@ -242,11 +243,8 @@ function RescheduleForm({
   const [error, setError] = useState<string | null>(null);
 
   const days = useMemo(() => {
-    return Array.from({ length: 14 }).map((_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() + i + 1);
-      return d;
-    });
+    const today = todayInClinic();
+    return Array.from({ length: 14 }).map((_, i) => addDays(today, i + 1));
   }, []);
 
   useEffect(() => {
@@ -255,7 +253,7 @@ function RescheduleForm({
       return;
     }
     setLoadingSlots(true);
-    getAvailableSlots(new Date(date))
+    fetchAvailableSlots(date, token)
       .then(setSlots)
       .finally(() => setLoadingSlots(false));
   }, [date]);
@@ -284,9 +282,8 @@ function RescheduleForm({
       {error && <p className="mb-5 text-sm text-clay bg-clay/10 rounded-xl px-4 py-3">{error}</p>}
 
       <div className="flex flex-wrap gap-2 mb-6">
-        {days.map((d) => {
-          const iso = d.toISOString().slice(0, 10);
-          const label = d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+        {days.map((iso) => {
+          const label = formatDateLabel(iso, locale);
           const selected = date === iso;
           return (
             <button

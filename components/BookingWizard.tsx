@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { createBooking } from "@/lib/bookings";
-import { getAvailableSlots } from "@/lib/availability";
+import { fetchAvailableSlots } from "@/lib/availabilityClient";
+import { addDays, formatDateLabel, todayInClinic } from "@/lib/timezone";
 import { ChevronLeft, ChevronRight, Check, User, Users, Video, MessageCircle, Mail } from "lucide-react";
 
 type SessionType = "individual" | "couples";
@@ -336,15 +337,14 @@ function StepDateTime({
   update: <K extends keyof BookingData>(key: K, value: BookingData[K]) => void;
 }) {
   const t = useTranslations("booking.step3");
+  const locale = useLocale();
   const [slots, setSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
+  // Calendar dates in clinic time ("YYYY-MM-DD"), starting tomorrow
   const days = useMemo(() => {
-    return Array.from({ length: 14 }).map((_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() + i + 1);
-      return d;
-    });
+    const today = todayInClinic();
+    return Array.from({ length: 14 }).map((_, i) => addDays(today, i + 1));
   }, []);
 
   useEffect(() => {
@@ -354,7 +354,7 @@ function StepDateTime({
     }
     let cancelled = false;
     setLoadingSlots(true);
-    getAvailableSlots(new Date(data.date))
+    fetchAvailableSlots(data.date)
       .then((result) => {
         if (!cancelled) setSlots(result);
       })
@@ -370,9 +370,8 @@ function StepDateTime({
     <div>
       <h2 className="text-2xl mb-6 text-ink dark:text-mist tracking-tightest">{t("title")}</h2>
       <div className="flex flex-wrap gap-2 mb-8">
-        {days.map((d) => {
-          const iso = d.toISOString().slice(0, 10);
-          const label = d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+        {days.map((iso) => {
+          const label = formatDateLabel(iso, locale);
           const selected = data.date === iso;
           return (
             <button

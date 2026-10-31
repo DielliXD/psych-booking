@@ -1,3 +1,5 @@
+import { formatClinicDateTime } from "./timezone";
+
 interface BookingEmailData {
   name: string;
   sessionType: "individual" | "couples";
@@ -40,10 +42,7 @@ const copy = {
 
 export function buildConfirmationEmail(locale: "en" | "sq", data: BookingEmailData) {
   const t = copy[locale] ?? copy.en;
-  const when = new Date(data.scheduledAt).toLocaleString(locale === "sq" ? "sq-AL" : "en-GB", {
-    dateStyle: "full",
-    timeStyle: "short",
-  });
+  const when = formatClinicDateTime(data.scheduledAt, locale, { dateStyle: "full", timeStyle: "short" });
 
   const html = `
     <div style="font-family: sans-serif; max-width: 480px; margin: auto; color: #23302B;">
@@ -97,10 +96,7 @@ export function buildReminderEmail(
   const formatLabels = locale === "sq"
     ? { video: "Video-thirrje", chat: "Bisedë e Drejtpërdrejtë", async: "Mesazhe" }
     : { video: "Video Call", chat: "Live Chat", async: "Messaging" };
-  const when = new Date(data.scheduledAt).toLocaleString(locale === "sq" ? "sq-AL" : "en-GB", {
-    dateStyle: "full",
-    timeStyle: "short",
-  });
+  const when = formatClinicDateTime(data.scheduledAt, locale, { dateStyle: "full", timeStyle: "short" });
 
   const html = `
     <div style="font-family: sans-serif; max-width: 480px; margin: auto; color: #23302B;">
@@ -141,10 +137,7 @@ const cancellationCopy = {
 
 export function buildCancellationEmail(locale: "en" | "sq", data: { name: string; scheduledAt: string }) {
   const t = cancellationCopy[locale] ?? cancellationCopy.en;
-  const when = new Date(data.scheduledAt).toLocaleString(locale === "sq" ? "sq-AL" : "en-GB", {
-    dateStyle: "full",
-    timeStyle: "short",
-  });
+  const when = formatClinicDateTime(data.scheduledAt, locale, { dateStyle: "full", timeStyle: "short" });
 
   const html = `
     <div style="font-family: sans-serif; max-width: 480px; margin: auto; color: #23302B;">

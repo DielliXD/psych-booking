@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildConfirmationEmail } from "@/lib/email";
+import { isSlotAvailable } from "@/lib/availability";
+import { clinicTimeToUtc, DATE_RE, TIME_RE } from "@/lib/timezone";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -10,6 +12,9 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     const { date, time } = await req.json();
     if (!date || !time) {
       return NextResponse.json({ error: "date and time are required" }, { status: 400 });
+    }
+    if (!DATE_RE.test(date) || !TIME_RE.test(time)) {
+      return NextResponse.json({ error: "Invalid date or time" }, { status: 400 });
     }
 
     const { data: booking, error: fetchError } = await supabaseAdmin
@@ -30,7 +35,12 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       return NextResponse.json({ error: "Cannot reschedule a past session" }, { status: 400 });
     }
 
-    const newScheduledAt = new Date(`${date}T${time}:00`).toISOString();
+    if (!(await isSlotAvailable(date, time, { ignoreBookingId: booking.id }))) {
+      return NextResponse.json({ error: "SLOT_TAKEN" }, { status: 409 });
+    }
+
+    // date/time are clinic time, converted to the real UTC instant for storage
+    const newScheduledAt = clinicTimeToUtc(date, time).toISOString();
 
     const { error: updateError } = await supabaseAdmin
       .from("bookings")

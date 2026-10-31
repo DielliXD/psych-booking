@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { formatClinicDateTime } from "@/lib/timezone";
 import { NotebookPen, ChevronDown, MessageSquare, Send } from "lucide-react";
 
 interface BookingRow {
@@ -130,10 +131,7 @@ function BookingCard({
   const [saved, setSaved] = useState(false);
 
   const patient = Array.isArray(b.patients) ? b.patients[0] : b.patients;
-  const when = new Date(b.scheduled_at).toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+  const when = formatClinicDateTime(b.scheduled_at, "en");
 
   async function handleSave() {
     setSaving(true);

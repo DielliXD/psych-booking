@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { isSlotAvailable } from "@/lib/availability";
+import { clinicTimeToUtc, DATE_RE, TIME_RE } from "@/lib/timezone";
 
 const PSYCHOLOGIST_ID = process.env.NEXT_PUBLIC_PSYCHOLOGIST_ID ?? "";
 
@@ -9,6 +11,15 @@ export async function POST(req: NextRequest) {
 
     if (!sessionType || !format || !date || !time || !name || !email) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    if (!DATE_RE.test(date) || !TIME_RE.test(time)) {
+      return NextResponse.json({ error: "Invalid date or time" }, { status: 400 });
+    }
+
+    // Never trust the browser: the slot must really be open in her schedule.
+    if (!(await isSlotAvailable(date, time))) {
+      return NextResponse.json({ error: "SLOT_TAKEN" }, { status: 409 });
     }
 
     // Find or create the patient by email
@@ -30,7 +41,8 @@ export async function POST(req: NextRequest) {
       patientId = newPatient.id;
     }
 
-    const scheduledAt = new Date(`${date}T${time}:00`).toISOString();
+    // date/time are clinic time (e.g. Kosovo), not server time (UTC on Vercel)
+    const scheduledAt = clinicTimeToUtc(date, time).toISOString();
 
     // Auto-attach her recurring Zoom/Meet link for video sessions
     let meetingLink: string | null = null;
