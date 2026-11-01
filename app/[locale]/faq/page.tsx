@@ -11,7 +11,7 @@ export default function FaqPage() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="max-w-3xl mx-auto px-6 lg:px-8 py-24">
+    <section className="max-w-3xl mx-auto px-page py-14 sm:py-24">
       <h1 className="text-4xl mb-14 text-ink dark:text-mist tracking-tightest">{t("title")}</h1>
 
       <div className="divide-y divide-pine/10 dark:divide-sage/10 mb-20">

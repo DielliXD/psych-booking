@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { LogOut } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { formatClinicDateTime } from "@/lib/timezone";
 import { getTranslations } from "next-intl/server";
@@ -58,15 +59,18 @@ export default async function DashboardPage({ params: { locale } }: { params: { 
   const past = all.filter((b) => new Date(b.scheduled_at) < now || b.status === "cancelled");
 
   return (
-    <div className="max-w-3xl mx-auto px-6 lg:px-8 py-24">
+    <div className="max-w-3xl mx-auto px-page py-14 sm:py-24">
       <div className="flex items-center justify-between mb-14">
         <div>
           <h1 className="text-3xl mb-1 text-ink dark:text-mist tracking-tightest">{t("title")}</h1>
           <p className="text-sm text-ink/50 dark:text-mist/50">{patient?.name}</p>
         </div>
         <form action={`/api/auth/patient/logout?locale=${locale}`} method="POST">
-          <button className="text-sm text-ink/50 dark:text-mist/50 hover:text-clay transition-colors">
-            {t("signOut")}
+          <button
+            type="submit"
+            className="inline-flex items-center gap-2 rounded-full border-2 border-pine/15 dark:border-sage/20 px-4 py-2 text-sm font-medium text-ink/70 dark:text-mist/70 hover:border-clay hover:text-clay transition-colors"
+          >
+            <LogOut size={15} /> {t("signOut")}
           </button>
         </form>
       </div>

@@ -115,7 +115,7 @@ export function BookingWizard() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-6 lg:px-8 py-20">
+    <div className="max-w-4xl mx-auto px-page py-12 sm:py-20">
       <h1 className="text-4xl mb-3 text-ink dark:text-mist tracking-tightest">{t("title")}</h1>
 
       {step < 6 && (
@@ -148,7 +148,7 @@ export function BookingWizard() {
                 type="button"
                 onClick={back}
                 disabled={step === 1}
-                className="inline-flex items-center gap-1 text-sm text-ink/55 dark:text-mist/55 hover:text-ink dark:hover:text-mist disabled:opacity-0 transition-colors"
+                className="inline-flex min-h-[44px] items-center gap-1 rounded-full pl-2 pr-4 -ml-2 text-sm text-stone dark:text-haze hover:text-ink dark:hover:text-mist disabled:invisible transition-colors"
               >
                 <ChevronLeft size={16} /> {t("back")}
               </button>

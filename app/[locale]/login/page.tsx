@@ -35,7 +35,7 @@ function LoginPageContent() {
   }
 
   return (
-    <div className="max-w-md mx-auto px-6 lg:px-8 py-28">
+    <div className="max-w-md mx-auto px-page py-16 sm:py-28">
       <h1 className="text-3xl mb-3 text-ink dark:text-mist tracking-tightest">{t("title")}</h1>
       <p className="text-sm text-ink/55 dark:text-mist/55 mb-10">
         {t("intro")}

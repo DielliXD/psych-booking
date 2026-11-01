@@ -6,7 +6,13 @@
     "faq": "Pyetje të Shpeshta",
     "contact": "Kontakt",
     "mySessions": "Seancat e Mia",
-    "book": "Rezervo një Seancë"
+    "book": "Rezervo një Seancë",
+    "brand": "Shprehu",
+    "mainNav": "Kryesore",
+    "openMenu": "Hap menunë",
+    "closeMenu": "Mbyll menunë",
+    "faqShort": "Pyetje",
+    "bookShort": "Rezervo"
   },
   "home": {
     "heroTitle": "Një hapësirë e qetë për të punuar me atë që të shqetëson",
@@ -169,7 +175,9 @@
   "footer": {
     "rights": "Të gjitha të drejtat e rezervuara.",
     "privacy": "Politika e Privatësisë",
-    "terms": "Kushtet e Përdorimit"
+    "terms": "Kushtet e Përdorimit",
+    "owner": "Filloreta Bokshi, Prishtinë",
+    "legalNav": "Ligjore"
   },
   "theme": {
     "toggle": "Ndrysho temën"
@@ -214,5 +222,10 @@
     "emailPlaceholder": "ti@shembull.com",
     "sending": "Duke dërguar...",
     "send": "Dërgo lidhjen e hyrjes"
+  },
+  "meta": {
+    "brand": "Shprehu",
+    "title": "Shprehu — Terapi online me Filloreta Bokshi",
+    "description": "Terapi individuale dhe për çifte online, me video, bisedë ose mesazhe, me psikologen Filloreta Bokshi. Rezervo një kohë që të përshtatet."
   }
 }

@@ -4,31 +4,97 @@
 
 html {
   scroll-behavior: smooth;
+  /* Stop iOS from inflating text in landscape */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
-  @apply bg-linen text-ink dark:bg-charcoalGreen dark:text-mist font-body transition-colors duration-300;
-  font-feature-settings: "ss01" 1, "cv01" 1;
+  @apply bg-linen text-ink dark:bg-night dark:text-mist font-body antialiased transition-colors duration-300;
+  /* Long words, emails and URLs wrap instead of pushing the page sideways on small screens */
+  overflow-wrap: break-word;
 }
 
 h1, h2, h3, h4 {
   @apply font-display;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+img, svg, video {
+  max-width: 100%;
 }
 
 ::selection {
-  background-color: rgba(192, 137, 116, 0.25);
+  background-color: rgba(240, 162, 123, 0.35);
 }
 
-/* Visible keyboard focus, always */
+/* Visible keyboard focus, always — dark teal on light, apricot on dark */
 :focus-visible {
-  outline: 2px solid theme("colors.clay");
+  outline: 2px solid theme("colors.pine");
   outline-offset: 3px;
-  border-radius: 2px;
+  /* no border-radius here: the outline follows each element's own shape
+     (forcing 4px turned round buttons into rounded squares when focused) */
+}
+.dark :focus-visible {
+  outline-color: theme("colors.apricot");
+}
+
+/* Page gutters that also respect the notch / rounded corners in landscape.
+   16px on phones, 24px from 640px, 32px from 1024px — or the safe-area inset
+   if that is larger (e.g. iPhone 12 Pro Max on its side: ~47px). Use px-page
+   on every page container instead of plain px-*. */
+@layer utilities {
+  .px-page {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  @media (min-width: 640px) {
+    .px-page {
+      padding-left: max(1.5rem, env(safe-area-inset-left));
+      padding-right: max(1.5rem, env(safe-area-inset-right));
+    }
+  }
+  @media (min-width: 1024px) {
+    .px-page {
+      padding-left: max(2rem, env(safe-area-inset-left));
+      padding-right: max(2rem, env(safe-area-inset-right));
+    }
+  }
+}
+
+/* Language switch cross-fade.
+   LanguageSwitcher sets body[data-lang-switch] → page text fades out (fast),
+   the page re-renders in the new language, the Header removes the attribute
+   → text fades back in (slower). Avoids everything "jumping" at once. */
+main,
+footer,
+[data-lang-fade] {
+  transition: opacity 420ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+body[data-lang-switch] main,
+body[data-lang-switch] footer,
+body[data-lang-switch] [data-lang-fade] {
+  opacity: 0;
+  transition-duration: 200ms;
+}
+
+/* Anchor targets don't hide under the sticky header */
+:target {
+  scroll-margin-top: 6rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;

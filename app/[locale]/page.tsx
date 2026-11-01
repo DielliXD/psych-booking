@@ -22,7 +22,7 @@ export default async function HomePage() {
     <>
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8 pt-24 pb-32 grid md:grid-cols-2 gap-16 items-center">
+        <div className="max-w-6xl mx-auto px-page pt-14 sm:pt-24 pb-20 sm:pb-32 grid md:grid-cols-2 gap-16 items-center">
           <div className="animate-fadeUp">
             <span className="inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase text-clay mb-6">
               <span className="h-1.5 w-1.5 rounded-full bg-clay" />
@@ -64,7 +64,7 @@ export default async function HomePage() {
       </section>
 
       {/* How it works */}
-      <section className="max-w-6xl mx-auto px-6 lg:px-8 pb-28">
+      <section className="max-w-6xl mx-auto px-page pb-16 sm:pb-28">
         <div className="max-w-xl mb-16">
           <h2 className="text-3xl mb-4 text-ink dark:text-mist tracking-tightest">{t("introTitle")}</h2>
           <p className="text-ink/60 dark:text-mist/60 leading-relaxed">{t("introText")}</p>
@@ -88,7 +88,7 @@ export default async function HomePage() {
 
       {/* Trust / why choose */}
       <section className="bg-pine/[0.03] dark:bg-sage/[0.03] py-28">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-page">
           <div className="max-w-xl mb-16">
             <h2 className="text-3xl mb-4 text-ink dark:text-mist tracking-tightest">{t("trustTitle")}</h2>
             <p className="text-ink/60 dark:text-mist/60 leading-relaxed">{t("trustText")}</p>
@@ -109,7 +109,7 @@ export default async function HomePage() {
       </section>
 
       {/* Testimonial */}
-      <section className="max-w-3xl mx-auto px-6 lg:px-8 py-28 text-center">
+      <section className="max-w-3xl mx-auto px-page py-16 sm:py-28 text-center">
         <p className="text-xs font-medium tracking-widest uppercase text-clay mb-8">{t("testimonialTitle")}</p>
         <blockquote className="font-display text-2xl sm:text-3xl leading-snug text-ink dark:text-mist mb-6 italic">
           &ldquo;{t("testimonialQuote")}&rdquo;
@@ -118,7 +118,7 @@ export default async function HomePage() {
       </section>
 
       {/* Final CTA */}
-      <section className="max-w-4xl mx-auto px-6 lg:px-8 pb-32 text-center">
+      <section className="max-w-4xl mx-auto px-page pb-20 sm:pb-32 text-center">
         <div className="rounded-4xl bg-pine dark:bg-sage text-linen dark:text-charcoalGreen px-8 py-16 shadow-card">
           <h2 className="text-3xl mb-3 tracking-tightest">{t("finalCtaTitle")}</h2>
           <p className="opacity-80 mb-9 max-w-md mx-auto">{t("finalCtaText")}</p>

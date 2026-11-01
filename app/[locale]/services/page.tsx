@@ -35,7 +35,7 @@ export default function ServicesPage() {
   ];
 
   return (
-    <section className="max-w-5xl mx-auto px-6 lg:px-8 py-24">
+    <section className="max-w-5xl mx-auto px-page py-14 sm:py-24">
       <h1 className="text-4xl mb-4 text-ink dark:text-mist tracking-tightest">{t("title")}</h1>
       <p className="text-sm text-ink/45 dark:text-mist/45 mb-14">{t("durationNote")}</p>
 

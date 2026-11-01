@@ -6,7 +6,13 @@
     "faq": "FAQ",
     "contact": "Contact",
     "mySessions": "My Sessions",
-    "book": "Book a Session"
+    "book": "Book a Session",
+    "brand": "Tell Me",
+    "mainNav": "Main",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "faqShort": "FAQ",
+    "bookShort": "Book"
   },
   "home": {
     "heroTitle": "A calm space to work through what's on your mind",
@@ -169,7 +175,9 @@
   "footer": {
     "rights": "All rights reserved.",
     "privacy": "Privacy Policy",
-    "terms": "Terms"
+    "terms": "Terms",
+    "owner": "Filloreta Bokshi, Prishtina",
+    "legalNav": "Legal"
   },
   "theme": {
     "toggle": "Toggle theme"
@@ -214,5 +222,10 @@
     "emailPlaceholder": "you@example.com",
     "sending": "Sending...",
     "send": "Send login link"
+  },
+  "meta": {
+    "brand": "Tell Me",
+    "title": "Tell Me — Online therapy with Filloreta Bokshi",
+    "description": "Individual and couples therapy online, by video, chat or messaging, with psychologist Filloreta Bokshi. Book a time that suits you."
   }
 }

@@ -18,7 +18,7 @@ function withLinks(text: string) {
 
 export function LegalDocument({ title, updatedLabel, doc }: { title: string; updatedLabel: string; doc: LegalDoc }) {
   return (
-    <article className="max-w-2xl mx-auto px-6 lg:px-8 py-24">
+    <article className="max-w-2xl mx-auto px-page py-14 sm:py-24">
       <h1 className="text-3xl md:text-4xl mb-3 text-ink dark:text-mist tracking-tightest">{title}</h1>
       <p className="text-xs uppercase tracking-widest text-clay mb-10">{updatedLabel}</p>
       <p className="text-[0.95rem] leading-relaxed text-ink/75 dark:text-mist/75 mb-12">{withLinks(doc.intro)}</p>

@@ -57,12 +57,12 @@ export default function ManageBookingPage() {
   }
 
   if (loading) {
-    return <p className="max-w-md mx-auto px-6 py-24 text-sm text-ink/50 dark:text-mist/50">...</p>;
+    return <p className="max-w-md mx-auto px-page py-14 sm:py-24 text-sm text-ink/50 dark:text-mist/50">...</p>;
   }
 
   if (notFound || !booking) {
     return (
-      <div className="max-w-md mx-auto px-6 py-24 text-center">
+      <div className="max-w-md mx-auto px-page py-14 sm:py-24 text-center">
         <p className="text-ink/60 dark:text-mist/60">{t("invalidLink")}</p>
       </div>
     );
@@ -75,7 +75,7 @@ export default function ManageBookingPage() {
 
   if (rescheduled) {
     return (
-      <div className="max-w-md mx-auto px-6 lg:px-8 py-28 text-center animate-fadeUp">
+      <div className="max-w-md mx-auto px-page py-16 sm:py-28 text-center animate-fadeUp">
         <div className="mx-auto mb-7 w-16 h-16 rounded-full bg-gradient-to-br from-pine to-pine/70 dark:from-sage dark:to-sage/70 shadow-lifted flex items-center justify-center">
           <Check className="text-linen dark:text-charcoalGreen" size={28} strokeWidth={2.5} />
         </div>
@@ -88,7 +88,7 @@ export default function ManageBookingPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto px-6 lg:px-8 py-28">
+    <div className="max-w-md mx-auto px-page py-16 sm:py-28">
       {isCancelled ? (
         <div className="text-center animate-fadeUp">
           <div className="mx-auto mb-7 w-16 h-16 rounded-full bg-gradient-to-br from-pine to-pine/70 dark:from-sage dark:to-sage/70 shadow-lifted flex items-center justify-center">

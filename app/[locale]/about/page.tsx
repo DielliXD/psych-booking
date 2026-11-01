@@ -4,7 +4,7 @@ export default async function AboutPage() {
   const t = await getTranslations("about");
 
   return (
-    <section className="max-w-5xl mx-auto px-6 lg:px-8 py-24">
+    <section className="max-w-5xl mx-auto px-page py-14 sm:py-24">
       <div className="grid md:grid-cols-[1fr_1.3fr] gap-16 items-start mb-24">
         <div className="relative aspect-[4/5] rounded-4xl bg-gradient-to-br from-pine/15 to-clay/10 dark:from-sage/15 dark:to-clay/10 shadow-card flex items-center justify-center">
           <p className="text-xs text-ink/35 dark:text-mist/35 px-6 text-center">

@@ -34,7 +34,7 @@ export default function ContactPage() {
   }
 
   return (
-    <section className="max-w-xl mx-auto px-6 lg:px-8 py-24">
+    <section className="max-w-xl mx-auto px-page py-14 sm:py-24">
       <h1 className="text-4xl mb-12 text-ink dark:text-mist tracking-tightest">{t("title")}</h1>
       {status === "sent" ? (
         <div className="rounded-3xl border border-pine/10 dark:border-sage/10 bg-white/40 dark:bg-white/[0.02] shadow-soft p-8 flex items-center gap-4 animate-fadeUp">
