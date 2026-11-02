@@ -1,134 +1,278 @@
 import Link from "next/link";
 import { getTranslations, getLocale } from "next-intl/server";
-import { ShieldCheck, GraduationCap, Ban } from "lucide-react";
+import { ArrowRight, ChevronDown, Globe2, Languages, Mail, MessageCircle, ShieldCheck, Video } from "lucide-react";
+import { BreathingFigure } from "@/components/home/BreathingFigure";
+import { NextSlots } from "@/components/home/NextSlots";
+import { getPrices } from "@/lib/prices";
+
+// Path under /public once Filloreta has a portrait (e.g. "/images/filloreta.jpg").
+// Until then a calm monogram card stands in — never a "[photo]" placeholder.
+const PORTRAIT_SRC: string | null = null;
+
+const FAQ_KEYS = ["q1", "q3", "q4", "q7"] as const;
 
 export default async function HomePage() {
-  const t = await getTranslations("home");
   const locale = await getLocale();
+  const [t, tServices, tFaq, prices] = await Promise.all([
+    getTranslations("home"),
+    getTranslations("services"),
+    getTranslations("faqPage"),
+    getPrices(),
+  ]);
 
   const steps = [
     { title: t("step1Title"), text: t("step1Text") },
     { title: t("step2Title"), text: t("step2Text") },
     { title: t("step3Title"), text: t("step3Text") },
   ];
-
-  const trustPoints = [
-    { icon: ShieldCheck, title: t("trust1Title"), text: t("trust1Text") },
-    { icon: GraduationCap, title: t("trust2Title"), text: t("trust2Text") },
-    { icon: Ban, title: t("trust3Title"), text: t("trust3Text") },
+  const formats = [
+    { icon: Video, title: tServices("formatVideo"), text: tServices("formatVideoText") },
+    { icon: MessageCircle, title: tServices("formatChat"), text: tServices("formatChatText") },
+    { icon: Mail, title: tServices("formatAsync"), text: tServices("formatAsyncText") },
   ];
+  // Topics she works with — confirm the list with Filloreta.
+  const topics = t("topics").split("|");
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="max-w-6xl mx-auto px-page pt-14 sm:pt-24 pb-20 sm:pb-32 grid md:grid-cols-2 gap-16 items-center">
-          <div className="animate-fadeUp">
-            <span className="inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase text-clay mb-6">
-              <span className="h-1.5 w-1.5 rounded-full bg-clay" />
-              Terapi &middot; Individuale &amp; Çifte
-            </span>
-            <h1 className="text-4xl sm:text-5xl lg:text-[3.4rem] leading-[1.08] tracking-tightest text-ink dark:text-mist mb-7 max-w-lg">
-              {t("heroTitle")}
-            </h1>
-            <p className="text-lg leading-relaxed text-ink/65 dark:text-mist/65 mb-10 max-w-md">
-              {t("heroSubtitle")}
+      {/* ───────── Hero ───────── */}
+      <section className="relative overflow-hidden bg-night text-mist">
+        <div className="mx-auto px-page grid max-w-6xl items-center gap-8 pb-16 pt-8 sm:gap-10 sm:pb-20 sm:pt-14 md:grid-cols-[1.15fr_0.85fr] md:gap-12 lg:gap-16 lg:py-24 short:py-10">
+          <div className="order-2 animate-fadeUp md:order-1">
+            <p className="mb-5 inline-flex items-center gap-2.5 text-[0.8rem] font-semibold uppercase tracking-widest text-apricot sm:text-sm">
+              <span className="h-2 w-2 rounded-full bg-apricot" aria-hidden="true" />
+              {t("heroEyebrow")}
             </p>
-            <Link
-              href={`/${locale}/book`}
-              className="inline-flex items-center gap-2 rounded-full bg-pine text-linen dark:bg-sage dark:text-charcoalGreen px-7 py-3.5 font-medium shadow-soft hover:shadow-lifted hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-smooth"
-            >
-              {t("heroCta")}
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </Link>
+            <h1 className="mb-6 max-w-xl text-display-xl font-semibold">{t("heroTitle")}</h1>
+            <p className="mb-9 max-w-lg text-lg leading-relaxed text-haze sm:text-xl">{t("heroSubtitle")}</p>
+            <div className="flex flex-col gap-3 xs:flex-row xs:flex-wrap">
+              <Link
+                href={`/${locale}/book`}
+                className="inline-flex min-h-[52px] items-center justify-center gap-2.5 rounded-full bg-apricot px-7 text-[1.05rem] font-semibold text-ink shadow-lifted transition-transform duration-300 ease-smooth hover:-translate-y-0.5"
+              >
+                {t("heroCta")}
+                <ArrowRight size={18} aria-hidden="true" />
+              </Link>
+              <a
+                href="#how"
+                className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-mist/30 px-7 text-[1.05rem] font-medium text-mist transition-colors hover:border-apricot hover:text-apricot"
+              >
+                {t("heroSecondary")}
+              </a>
+            </div>
+            <ul className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-[0.95rem] text-haze">
+              <li className="flex items-center gap-2">
+                <ShieldCheck size={18} className="text-apricot" aria-hidden="true" />
+                {t("trustConfidential")}
+              </li>
+              <li className="flex items-center gap-2">
+                <Globe2 size={18} className="text-apricot" aria-hidden="true" />
+                {t("trustOnline")}
+              </li>
+              <li className="flex items-center gap-2">
+                <Languages size={18} className="text-apricot" aria-hidden="true" />
+                {t("trustLanguages")}
+              </li>
+            </ul>
           </div>
 
-          <div className="relative h-80 md:h-[26rem] flex items-center justify-center" aria-hidden="true">
-            <div className="absolute w-64 h-64 md:w-80 md:h-80 bg-gradient-to-br from-clay/25 to-clay/5 dark:from-sage/15 dark:to-sage/5 rounded-organic blur-sm animate-fadeUp" />
-            <div className="absolute w-44 h-44 md:w-56 md:h-56 bg-gradient-to-tr from-pine/20 to-pine/5 dark:from-pine/35 dark:to-pine/10 rounded-organic" />
-            <div className="absolute w-24 h-24 rounded-full bg-linen dark:bg-charcoalGreen shadow-lifted flex items-center justify-center">
-              <svg width="36" height="36" viewBox="0 0 100 100" fill="none">
-                <path
-                  d="M15 50 Q 30 22, 50 50 T 85 50"
-                  stroke="currentColor"
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                  className="text-pine dark:text-sage"
-                />
-              </svg>
-            </div>
+          <div className="order-1 mx-auto w-[min(46vw,11rem)] xs:w-[min(46vw,13rem)] sm:w-[16rem] md:order-2 md:w-full short:max-w-[11rem] short:self-start">
+            <BreathingFigure inhaleLabel={t("breatheIn")} exhaleLabel={t("breatheOut")} ariaLabel={t("figureLabel")} />
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="max-w-6xl mx-auto px-page pb-16 sm:pb-28">
-        <div className="max-w-xl mb-16">
-          <h2 className="text-3xl mb-4 text-ink dark:text-mist tracking-tightest">{t("introTitle")}</h2>
-          <p className="text-ink/60 dark:text-mist/60 leading-relaxed">{t("introText")}</p>
+      {/* ───────── Topics ───────── */}
+      <section className="mx-auto px-page max-w-6xl pb-6 pt-16 sm:pt-24">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-x-12 gap-y-4 sm:mb-10">
+          <h2 className="max-w-xl text-display-lg font-semibold">{t("topicsTitle")}</h2>
+          <p className="max-w-md text-[1.05rem] leading-relaxed text-stone dark:text-haze">{t("topicsText")}</p>
         </div>
-
-        <ol className="grid sm:grid-cols-3 gap-6">
-          {steps.map((step, i) => (
+        <ul className="flex flex-wrap gap-2.5">
+          {topics.map((topic) => (
             <li
-              key={step.title}
-              className="group relative rounded-3xl border border-pine/10 dark:border-sage/10 bg-white/40 dark:bg-white/[0.02] p-7 shadow-soft hover:shadow-card transition-shadow duration-300"
+              key={topic}
+              className="rounded-full border border-line bg-white px-4 py-2.5 text-[0.95rem] font-medium sm:px-5 sm:py-3 dark:border-mist/10 dark:bg-mist/[0.04]"
             >
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-pine/8 dark:bg-sage/10 font-display text-sm text-pine dark:text-sage mb-5">
-                {i + 1}
-              </span>
-              <h3 className="text-lg mb-2.5 text-ink dark:text-mist">{step.title}</h3>
-              <p className="text-sm leading-relaxed text-ink/55 dark:text-mist/55">{step.text}</p>
+              {topic}
             </li>
           ))}
-        </ol>
+        </ul>
       </section>
 
-      {/* Trust / why choose */}
-      <section className="bg-pine/[0.03] dark:bg-sage/[0.03] py-28">
-        <div className="max-w-6xl mx-auto px-page">
-          <div className="max-w-xl mb-16">
-            <h2 className="text-3xl mb-4 text-ink dark:text-mist tracking-tightest">{t("trustTitle")}</h2>
-            <p className="text-ink/60 dark:text-mist/60 leading-relaxed">{t("trustText")}</p>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-6">
-            {trustPoints.map(({ icon: Icon, title, text }) => (
-              <div key={title} className="rounded-3xl bg-white/50 dark:bg-white/[0.02] p-7 shadow-soft">
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-pine/8 dark:bg-sage/10 mb-5">
-                  <Icon className="text-pine dark:text-sage" size={20} strokeWidth={1.75} />
-                </div>
-                <h3 className="text-base mb-2 text-ink dark:text-mist">{title}</h3>
-                <p className="text-sm leading-relaxed text-ink/55 dark:text-mist/55">{text}</p>
+      {/* ───────── About teaser ───────── */}
+      <section className="mx-auto px-page max-w-6xl py-14 sm:py-20">
+        <div className="grid items-center gap-8 rounded-[2rem] border border-line bg-white p-5 sm:p-10 md:grid-cols-[0.8fr_1.2fr] md:gap-12 lg:p-14 dark:border-mist/10 dark:bg-mist/[0.03]">
+          <div className="relative mx-auto aspect-square w-full max-w-[13rem] overflow-hidden sm:max-w-[16rem] md:aspect-[4/5] md:max-w-sm rounded-3xl bg-mint dark:bg-mist/10">
+            {PORTRAIT_SRC ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={PORTRAIT_SRC} alt="Filloreta Bokshi" className="h-full w-full object-cover" />
+            ) : (
+              <div aria-hidden="true" className="absolute inset-0 grid place-items-center">
+                <span className="absolute aspect-square w-[70%] rounded-full border border-pine/15 dark:border-mist/15" />
+                <span className="absolute aspect-square w-[48%] rounded-full border border-pine/20 dark:border-mist/20" />
+                <span className="grid aspect-square w-[32%] place-items-center rounded-full bg-apricot font-display text-3xl font-semibold text-ink">
+                  FB
+                </span>
               </div>
-            ))}
+            )}
+          </div>
+          <div>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-clay dark:text-apricot">{t("aboutEyebrow")}</p>
+            <h2 className="mb-5 text-display-lg font-semibold">{t("aboutTitle")}</h2>
+            <p className="mb-8 max-w-xl text-lg leading-relaxed text-ink/80 dark:text-mist/85">{t("aboutText")}</p>
+            <Link
+              href={`/${locale}/about`}
+              className="group inline-flex min-h-[48px] items-center gap-2 rounded-full border border-line px-6 font-semibold text-pine transition-colors hover:border-pine dark:border-mist/20 dark:text-apricot dark:hover:border-apricot"
+            >
+              {t("aboutCta")}
+              <ArrowRight size={18} aria-hidden="true" className="transition-transform group-hover:translate-x-1" />
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Testimonial */}
-      <section className="max-w-3xl mx-auto px-page py-16 sm:py-28 text-center">
-        <p className="text-xs font-medium tracking-widest uppercase text-clay mb-8">{t("testimonialTitle")}</p>
-        <blockquote className="font-display text-2xl sm:text-3xl leading-snug text-ink dark:text-mist mb-6 italic">
-          &ldquo;{t("testimonialQuote")}&rdquo;
-        </blockquote>
-        <p className="text-sm text-ink/45 dark:text-mist/45">{t("testimonialAttribution")}</p>
+      {/* ───────── How it works + live times ───────── */}
+      <section id="how" className="mx-auto px-page max-w-6xl py-14 sm:py-20">
+        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+          <div>
+            <h2 className="mb-8 text-display-lg font-semibold sm:mb-10">{t("howTitle")}</h2>
+            <ol className="relative">
+              {steps.map((step, i) => (
+                <li key={step.title} className="relative flex gap-5 pb-8 last:pb-0">
+                  {i < steps.length - 1 && (
+                    <span aria-hidden="true" className="absolute left-[21px] top-12 h-[calc(100%-3rem)] w-px bg-line dark:bg-mist/15" />
+                  )}
+                  <span
+                    className={`grid h-11 w-11 shrink-0 place-items-center rounded-full font-display font-semibold ${
+                      i === steps.length - 1 ? "bg-apricot text-ink" : "bg-pine text-white dark:bg-mist/15 dark:text-mist"
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <div className="pt-1.5">
+                    <h3 className="mb-1 text-lg font-semibold">{step.title}</h3>
+                    <p className="leading-relaxed text-stone dark:text-haze">{step.text}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <NextSlots
+            locale={locale}
+            labels={{
+              title: t("slotsTitle"),
+              timezone: t("slotsTimezone"),
+              more: t("slotsMore", { count: "{count}" }),
+              loading: t("slotsLoading"),
+              empty: t("slotsEmpty"),
+              error: t("slotsError"),
+              cta: t("slotsCta"),
+            }}
+          />
+        </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="max-w-4xl mx-auto px-page pb-20 sm:pb-32 text-center">
-        <div className="rounded-4xl bg-pine dark:bg-sage text-linen dark:text-charcoalGreen px-8 py-16 shadow-card">
-          <h2 className="text-3xl mb-3 tracking-tightest">{t("finalCtaTitle")}</h2>
-          <p className="opacity-80 mb-9 max-w-md mx-auto">{t("finalCtaText")}</p>
-          <Link
-            href={`/${locale}/book`}
-            className="inline-flex items-center gap-2 rounded-full bg-linen text-pine dark:bg-charcoalGreen dark:text-sage px-7 py-3.5 font-medium shadow-soft hover:shadow-lifted hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-smooth"
-          >
-            {t("finalCtaButton")}
-          </Link>
+      {/* ───────── Formats + prices ───────── */}
+      <section className="mx-auto px-page max-w-6xl py-14 sm:py-20">
+        <h2 className="mb-8 text-display-lg font-semibold sm:mb-10">{t("formatsTitle")}</h2>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {formats.map(({ icon: Icon, title, text }) => (
+            <div key={title} className="rounded-3xl border border-line bg-white p-6 sm:p-7 dark:border-mist/10 dark:bg-mist/[0.03]">
+              <span className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-mint text-pine dark:bg-mist/10 dark:text-apricot">
+                <Icon size={22} aria-hidden="true" />
+              </span>
+              <h3 className="mb-2 text-xl font-semibold">{title}</h3>
+              <p className="leading-relaxed text-stone dark:text-haze">{text}</p>
+            </div>
+          ))}
         </div>
+
+        {(prices.individual || prices.couples) && (
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {[
+              { label: tServices("individualTitle"), price: prices.individual, dark: true },
+              { label: tServices("couplesTitle"), price: prices.couples, dark: false },
+            ]
+              .filter((p) => p.price)
+              .map((p) => (
+                <div
+                  key={p.label}
+                  className={`flex flex-wrap items-end justify-between gap-5 rounded-3xl p-6 sm:p-8 ${
+                    p.dark ? "bg-night text-mist" : "border border-line bg-white dark:border-mist/10 dark:bg-mist/[0.03]"
+                  }`}
+                >
+                  <div>
+                    <p className={`mb-1 ${p.dark ? "text-haze" : "text-stone dark:text-haze"}`}>
+                      {p.label} · {t("perSession")}
+                    </p>
+                    <p className="font-display text-4xl font-semibold tracking-tight">{p.price}</p>
+                  </div>
+                  <Link
+                    href={`/${locale}/book`}
+                    className={`inline-flex min-h-[48px] items-center rounded-full px-6 font-semibold ${
+                      p.dark ? "bg-apricot text-ink" : "bg-pine text-white dark:bg-apricot dark:text-ink"
+                    }`}
+                  >
+                    {t("bookThis")}
+                  </Link>
+                </div>
+              ))}
+          </div>
+        )}
+      </section>
+
+      {/* ───────── FAQ ───────── */}
+      <section className="mx-auto px-page max-w-3xl py-14 sm:py-20">
+        <h2 className="mb-8 text-center text-display-lg font-semibold sm:mb-10">{t("faqTitle")}</h2>
+        <div className="flex flex-col gap-3">
+          {FAQ_KEYS.map((key) => (
+            <details
+              key={key}
+              className="group rounded-2xl border border-line bg-white open:shadow-soft dark:border-mist/10 dark:bg-mist/[0.03]"
+            >
+              <summary className="flex min-h-[56px] cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-[1.05rem] font-semibold sm:px-6 [&::-webkit-details-marker]:hidden">
+                {tFaq(`${key}q`)}
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-linen text-pine transition-transform duration-300 group-open:rotate-180 group-open:bg-apricot group-open:text-ink dark:bg-mist/10 dark:text-apricot">
+                  <ChevronDown size={18} aria-hidden="true" />
+                </span>
+              </summary>
+              <p className="px-5 pb-5 leading-relaxed text-stone sm:px-6 dark:text-haze">{tFaq(`${key}a`)}</p>
+            </details>
+          ))}
+        </div>
+        <p className="mt-8 text-center">
+          <Link href={`/${locale}/faq`} className="inline-flex min-h-[44px] items-center gap-2 font-semibold text-pine underline-offset-4 hover:underline dark:text-apricot">
+            {t("faqMore")}
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </p>
+      </section>
+
+      {/* ───────── Final CTA ───────── */}
+      <section className="mx-auto px-page max-w-6xl pb-6 pt-6 sm:pt-10">
+        <div className="relative overflow-hidden rounded-[2rem] bg-night px-6 py-12 text-mist sm:px-12 sm:py-16 lg:px-16">
+          <div
+            aria-hidden="true"
+            className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(240,162,123,0.5),rgba(240,162,123,0)_70%)] animate-breathe"
+          />
+          <div className="relative flex flex-wrap items-center justify-between gap-8">
+            <div className="max-w-xl">
+              <h2 className="mb-3 text-display-lg font-semibold">{t("finalCtaTitle")}</h2>
+              <p className="text-lg leading-relaxed text-haze">{t("finalCtaText")}</p>
+            </div>
+            <Link
+              href={`/${locale}/book`}
+              className="inline-flex min-h-[56px] w-full items-center justify-center gap-2.5 rounded-full bg-apricot px-8 text-lg font-semibold text-ink xs:w-auto"
+            >
+              {t("finalCtaButton")}
+              <ArrowRight size={18} aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+        <p className="mx-auto mt-8 max-w-xl text-center text-[0.95rem] leading-relaxed text-stone dark:text-haze">
+          {t.rich("crisis", { b: (chunks) => <strong className="text-ink dark:text-mist">{chunks}</strong> })}
+        </p>
       </section>
     </>
   );

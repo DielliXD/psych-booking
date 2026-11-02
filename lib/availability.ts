@@ -107,3 +107,54 @@ export async function isSlotAvailable(
   const slots = await getAvailableSlots(date, options);
   return slots.includes(time);
 }
+
+/**
+ * Open slots for every day from `from` to `to` (inclusive, "YYYY-MM-DD", clinic
+ * time) in 3 queries total instead of 3 per day. Used by the booking calendar
+ * and the home page. Same rules as getAvailableSlots().
+ */
+export async function getAvailabilityRange(from: string, to: string): Promise<{ date: string; slots: string[] }[]> {
+  if (!DATE_RE.test(from) || !DATE_RE.test(to) || from > to) return [];
+  checkConfig();
+
+  const today = todayInClinic();
+  const lastBookable = addDays(today, BOOKING_WINDOW_DAYS);
+  const dates: string[] = [];
+  for (let d = from; d <= to; d = addDays(d, 1)) dates.push(d);
+
+  const [exceptionsRes, rulesRes, bookingsRes] = await Promise.all([
+    supabaseAdmin
+      .from("availability_exceptions")
+      .select("date")
+      .eq("psychologist_id", PSYCHOLOGIST_ID)
+      .gte("date", from)
+      .lte("date", to),
+    supabaseAdmin.from("availability_rules").select("day_of_week, start_time, end_time").eq("psychologist_id", PSYCHOLOGIST_ID),
+    supabaseAdmin
+      .from("bookings")
+      .select("scheduled_at")
+      .eq("psychologist_id", PSYCHOLOGIST_ID)
+      .neq("status", "cancelled")
+      .gte("scheduled_at", clinicTimeToUtc(from, "00:00").toISOString())
+      .lt("scheduled_at", clinicTimeToUtc(addDays(to, 1), "00:00").toISOString()),
+  ]);
+  if (exceptionsRes.error) throw new Error(`availability_exceptions query failed: ${exceptionsRes.error.message}`);
+  if (rulesRes.error) throw new Error(`availability_rules query failed: ${rulesRes.error.message}`);
+  if (bookingsRes.error) throw new Error(`bookings query failed: ${bookingsRes.error.message}`);
+
+  const blocked = new Set((exceptionsRes.data ?? []).map((e) => String(e.date).slice(0, 10)));
+  const taken = new Set((bookingsRes.data ?? []).map((b) => new Date(b.scheduled_at).getTime()));
+  const earliest = Date.now() + MIN_NOTICE_MS;
+
+  return dates.map((date) => {
+    if (date < today || date > lastBookable || blocked.has(date)) return { date, slots: [] };
+    const weekday = dayOfWeek(date);
+    const rules = (rulesRes.data ?? []).filter((r) => r.day_of_week === weekday);
+    const all = Array.from(new Set(rules.flatMap((r) => toTimeSlots(r.start_time, r.end_time)))).sort();
+    const slots = all.filter((slot) => {
+      const instant = clinicTimeToUtc(date, slot).getTime();
+      return instant >= earliest && !taken.has(instant);
+    });
+    return { date, slots };
+  });
+}

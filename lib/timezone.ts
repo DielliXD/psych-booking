@@ -75,30 +75,87 @@ export function dayOfWeek(date: string): number {
   return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
 }
 
-/** Short label like "Tue, 3 Nov" for a calendar date in the given UI locale. */
-export function formatDateLabel(date: string, locale: string): string {
+// ── Display formatting ────────────────────────────────────────────────
+// Albanian names are spelled out here instead of relying on Intl: many
+// browsers and runtimes ship without "sq" locale data and silently fall
+// back to English ("Tue, Nov 3"). English uses Intl (en-GB), which every
+// engine has.
+const SQ = {
+  weekdays: ["e diel", "e hënë", "e martë", "e mërkurë", "e enjte", "e premte", "e shtunë"],
+  weekdaysShort: ["Die", "Hën", "Mar", "Mër", "Enj", "Pre", "Sht"],
+  months: ["janar", "shkurt", "mars", "prill", "maj", "qershor", "korrik", "gusht", "shtator", "tetor", "nëntor", "dhjetor"],
+  monthsShort: ["jan", "shk", "mar", "pri", "maj", "qer", "korr", "gush", "sht", "tet", "nën", "dhj"],
+};
+
+function calendarDate(date: string): Date {
   const [y, m, d] = date.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(toIntlLocale(locale), {
-    timeZone: "UTC",
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
+  return new Date(Date.UTC(y, m - 1, d));
 }
 
-/** Format a stored UTC timestamp for display, always in clinic time. */
+/** Pieces of a calendar date for custom layouts: { weekday: "Mar", day: 3, month: "nën" }. */
+export function dateParts(date: string, locale: string): { weekday: string; day: number; month: string } {
+  const dt = calendarDate(date);
+  if (locale === "sq") {
+    return { weekday: SQ.weekdaysShort[dt.getUTCDay()], day: dt.getUTCDate(), month: SQ.monthsShort[dt.getUTCMonth()] };
+  }
+  const fmt = (o: Intl.DateTimeFormatOptions) => dt.toLocaleDateString("en-GB", { timeZone: "UTC", ...o });
+  return { weekday: fmt({ weekday: "short" }), day: dt.getUTCDate(), month: fmt({ month: "short" }) };
+}
+
+/** Short label like "Tue 3 Nov" / "Mar, 3 nën" for a calendar date. */
+export function formatDateLabel(date: string, locale: string): string {
+  const { weekday, day, month } = dateParts(date, locale);
+  return locale === "sq" ? `${weekday}, ${day} ${month}` : `${weekday} ${day} ${month}`;
+}
+
+/** Heading for a run of dates: "Nëntor 2026", or "Nëntor – Dhjetor 2026" when it spans two months. */
+export function formatMonthRange(dates: string[], locale: string): string {
+  if (!dates.length) return "";
+  const label = (date: string, withYear: boolean) => {
+    const dt = calendarDate(date);
+    const name =
+      locale === "sq"
+        ? SQ.months[dt.getUTCMonth()]
+        : dt.toLocaleDateString("en-GB", { timeZone: "UTC", month: "long" });
+    const cap = name.charAt(0).toUpperCase() + name.slice(1);
+    return withYear ? `${cap} ${dt.getUTCFullYear()}` : cap;
+  };
+  const first = dates[0];
+  const last = dates[dates.length - 1];
+  if (first.slice(0, 7) === last.slice(0, 7)) return label(first, true);
+  const sameYear = first.slice(0, 4) === last.slice(0, 4);
+  return `${label(first, !sameYear)} – ${label(last, true)}`;
+}
+
+/** Long date like "3 November 2026" / "3 nëntor 2026" for a calendar date. */
+export function formatLongDate(date: string, locale: string): string {
+  const dt = calendarDate(date);
+  if (locale === "sq") return `${dt.getUTCDate()} ${SQ.months[dt.getUTCMonth()]} ${dt.getUTCFullYear()}`;
+  return dt.toLocaleDateString("en-GB", { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" });
+}
+
+/**
+ * Format a stored UTC timestamp for display, always in clinic time.
+ * dateStyle "full" → "e martë, 3 nëntor 2026, 14:00" / "Tuesday 3 November 2026 at 14:00";
+ * otherwise → "3 nën 2026, 14:00" / "3 Nov 2026, 14:00". Time is added when timeStyle is set.
+ */
 export function formatClinicDateTime(
   instant: string | Date,
   locale: string,
-  options: Intl.DateTimeFormatOptions = { dateStyle: "medium", timeStyle: "short" }
+  options: Pick<Intl.DateTimeFormatOptions, "dateStyle" | "timeStyle"> = { dateStyle: "medium", timeStyle: "short" }
 ): string {
-  return new Date(instant).toLocaleString(toIntlLocale(locale), { ...options, timeZone: CLINIC_TIMEZONE });
-}
-
-function toIntlLocale(locale: string): string {
-  if (locale === "sq") return "sq-AL";
-  if (locale === "en") return "en-GB";
-  return locale;
+  if (locale !== "sq") {
+    return new Date(instant).toLocaleString("en-GB", { ...options, timeZone: CLINIC_TIMEZONE });
+  }
+  const { date, time } = utcToClinic(instant);
+  const dt = calendarDate(date);
+  const d = dt.getUTCDate();
+  const y = dt.getUTCFullYear();
+  const datePart =
+    options.dateStyle === "full"
+      ? `${SQ.weekdays[dt.getUTCDay()]}, ${d} ${SQ.months[dt.getUTCMonth()]} ${y}`
+      : `${d} ${SQ.monthsShort[dt.getUTCMonth()]} ${y}`;
+  return options.timeStyle ? `${datePart}, ${time}` : datePart;
 }
 
 export const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;

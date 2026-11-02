@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import defaultTheme from "tailwindcss/defaultTheme";
 
 // "Frymë" design system for Shprehu / Tell Me.
 //
@@ -11,11 +12,15 @@ const config: Config = {
   darkMode: "class",
   content: ["./app/**/*.{js,ts,jsx,tsx,mdx}", "./components/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
+    // Declared here (not under extend) so `xs` sorts BEFORE sm/md/lg in the
+    // generated CSS — under extend it was appended last and `xs:` silently
+    // overrode `md:`/`lg:` classes. `short` stays last on purpose.
+    screens: {
+      xs: "400px", // small phones vs. regular phones
+      ...defaultTheme.screens,
+      short: { raw: "(max-height: 500px)" }, // landscape phones
+    },
     extend: {
-      screens: {
-        xs: "400px", // small phones vs. regular phones
-        short: { raw: "(max-height: 500px)" }, // landscape phones
-      },
       colors: {
         // ---- Light mode ----
         linen: "#F4F6F5", // page background — cool off-white
