@@ -124,13 +124,24 @@ alter table availability_rules enable row level security;
 alter table availability_exceptions enable row level security;
 alter table psychologists enable row level security;
 
--- Admin (any authenticated user — there's only one, the psychologist)
--- can read everything. Tighten further with a specific email/role check
--- if you ever add more than one authenticated user.
-create policy "admin can read bookings" on bookings for select to authenticated using (true);
-create policy "admin can read patients" on patients for select to authenticated using (true);
-create policy "admin can manage session notes" on session_notes for all to authenticated using (true) with check (true);
-create policy "admin can manage messages" on messages for all to authenticated using (true) with check (true);
+-- Admins: only Auth users listed in admin_users. Being logged in is not
+-- enough (see migration_009_admin_only.sql for the reasoning).
+create table admin_users (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamptz default now()
+);
+alter table admin_users enable row level security;
+
+create or replace function public.is_admin()
+returns boolean language sql stable security definer set search_path = public
+as $$ select exists (select 1 from admin_users where user_id = auth.uid()); $$;
+revoke all on function public.is_admin() from public, anon;
+grant execute on function public.is_admin() to authenticated;
+
+create policy "admin can read bookings" on bookings for select to authenticated using (public.is_admin());
+create policy "admin can read patients" on patients for select to authenticated using (public.is_admin());
+create policy "admin can manage session notes" on session_notes for all to authenticated using (public.is_admin()) with check (public.is_admin());
+create policy "admin can manage messages" on messages for all to authenticated using (public.is_admin()) with check (public.is_admin());
 alter table messages enable row level security;
 -- No public policy on messages — patient access goes through server API
 -- routes using the service role key (verified via their booking's
@@ -139,13 +150,13 @@ alter table messages enable row level security;
 -- Availability: public can read (needed for the booking calendar),
 -- only the authenticated admin can write.
 create policy "public can read availability rules" on availability_rules for select using (true);
-create policy "admin can manage availability rules" on availability_rules for all to authenticated using (true) with check (true);
+create policy "admin can manage availability rules" on availability_rules for all to authenticated using (public.is_admin()) with check (public.is_admin());
 
 create policy "public can read availability exceptions" on availability_exceptions for select using (true);
-create policy "admin can manage availability exceptions" on availability_exceptions for all to authenticated using (true) with check (true);
+create policy "admin can manage availability exceptions" on availability_exceptions for all to authenticated using (public.is_admin()) with check (public.is_admin());
 
 -- Admin can view and edit her own profile (name, bio, pricing, meeting link).
-create policy "admin can manage psychologist profile" on psychologists for all to authenticated using (true) with check (true);
+create policy "admin can manage psychologist profile" on psychologists for all to authenticated using (public.is_admin()) with check (public.is_admin());
 -- Public can read her profile — needed so Services/About pages can display
 -- her real bio, pricing, and cancellation policy instead of static text.
 create policy "public can read psychologist profile" on psychologists for select using (true);

@@ -13,16 +13,17 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setSending(true);
     setError(null);
-    // NOTE: this sends a magic link to any email typed in. That's fine as
-    // long as public signup is disabled in Supabase Auth settings and only
-    // the psychologist's account exists — otherwise anyone could try to
-    // request a link. Restrict signups in Supabase dashboard > Auth > Settings.
+    // shouldCreateUser: false → a link goes only to an account that already
+    // exists; typing a new email never creates an Auth user. Even then,
+    // admin access needs a row in admin_users (migration 009).
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/admin/calendar` },
+      options: { emailRedirectTo: `${window.location.origin}/admin/calendar`, shouldCreateUser: false },
     });
     setSending(false);
-    if (error) setError(error.message);
+    // Unknown emails get the same answer as known ones, so the form can't be
+    // used to find out which address is the admin's. Only rate limits show.
+    if (error && error.status === 429) setError(error.message);
     else setSent(true);
   }
 

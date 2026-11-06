@@ -20,7 +20,13 @@ Admin panel: `/admin` (not locale-prefixed). Patient login: `/[locale]/login`.
 3. In Supabase → Authentication → Settings, **disable public signups**
    (this only affects the admin login — patients use a separate, custom
    magic-link system that doesn't touch Supabase Auth at all, see below)
-4. Authentication → Users → manually create the psychologist's one login
+4. Authentication → Users → manually create the psychologist's one login,
+   then make that user an admin in the SQL editor (being logged in alone
+   gives no access — RLS and the API both check `admin_users`):
+   ```sql
+   insert into admin_users (user_id) select id from auth.users where email = 'her@email.com';
+   ```
+   Existing projects: run `supabase/migration_009_admin_only.sql` first.
 5. Create a free Resend account at resend.com, get an API key
 6. Copy `.env.example` to `.env.local` and fill in every value — see the
    comments in that file for what each one is and where to find it
