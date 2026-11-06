@@ -30,8 +30,8 @@ export default function AdminSettingsPage() {
           setBio(data.bio ?? "");
           setCredentials(data.credentials ?? "");
           setMeetingLink(data.default_meeting_link ?? "");
-          setIndividualPrice(data.individual_price ?? "");
-          setCouplesPrice(data.couples_price ?? "");
+          setIndividualPrice(toAmount(data.individual_price));
+          setCouplesPrice(toAmount(data.couples_price));
           setCancellationPolicy(data.cancellation_policy ?? "");
           setNotificationEmail(data.notification_email ?? "");
         }
@@ -108,21 +108,31 @@ export default function AdminSettingsPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs text-ink/50 dark:text-mist/50 mb-1">Individual session price</label>
-            <input
-              className={inputClass}
-              placeholder="e.g. €35 per session"
-              value={individualPrice}
-              onChange={(e) => setIndividualPrice(e.target.value)}
-            />
+            {/* Just the amount — the euro sign is shown here and added on the site */}
+            <div className="relative">
+              <input
+                className={`${inputClass} pr-10`}
+                inputMode="decimal"
+                placeholder="35"
+                value={individualPrice}
+                onChange={(e) => setIndividualPrice(e.target.value.replace(/[^\d.,]/g, ""))}
+              />
+              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-ink/50 dark:text-mist/50">€</span>
+            </div>
           </div>
           <div>
             <label className="block text-xs text-ink/50 dark:text-mist/50 mb-1">Couples session price</label>
-            <input
-              className={inputClass}
-              placeholder="e.g. €50 per session"
-              value={couplesPrice}
-              onChange={(e) => setCouplesPrice(e.target.value)}
-            />
+            {/* Just the amount — the euro sign is shown here and added on the site */}
+            <div className="relative">
+              <input
+                className={`${inputClass} pr-10`}
+                inputMode="decimal"
+                placeholder="50"
+                value={couplesPrice}
+                onChange={(e) => setCouplesPrice(e.target.value.replace(/[^\d.,]/g, ""))}
+              />
+              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-ink/50 dark:text-mist/50">€</span>
+            </div>
           </div>
         </div>
 
@@ -163,4 +173,10 @@ export default function AdminSettingsPage() {
       </form>
     </div>
   );
+}
+
+/** "€35 per session" / "35" / null → "35" (the amount only; € is added on display). */
+function toAmount(value: string | null | undefined): string {
+  const match = String(value ?? "").match(/\d+(?:[.,]\d+)?/);
+  return match ? match[0] : "";
 }

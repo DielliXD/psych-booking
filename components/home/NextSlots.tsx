@@ -62,7 +62,7 @@ export function NextSlots({
       </div>
 
       {!days && !failed && (
-        <div className="space-y-4" aria-busy="true" aria-label={labels.loading}>
+        <div className="space-y-4" role="status" aria-busy="true" aria-label={labels.loading}>
           <div className="grid grid-cols-3 gap-2">
             {[0, 1, 2].map((i) => (
               <div key={i} className="h-[5.25rem] animate-pulse rounded-2xl bg-linen dark:bg-mist/10" />

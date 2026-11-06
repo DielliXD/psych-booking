@@ -109,7 +109,7 @@ export function Header() {
               key={link.href}
               href={link.href}
               aria-current={isActive(link.href) ? "page" : undefined}
-              className={`whitespace-nowrap rounded-full px-3 py-2 transition-colors duration-200 ${
+              className={`inline-flex min-h-[44px] items-center whitespace-nowrap rounded-full px-3 transition-colors duration-200 ${
                 isActive(link.href)
                   ? "text-pine dark:text-apricot font-medium"
                   : "text-stone hover:text-pine dark:text-haze dark:hover:text-apricot"

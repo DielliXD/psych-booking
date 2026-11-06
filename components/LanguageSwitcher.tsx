@@ -59,7 +59,7 @@ export function LanguageSwitcher({ size = "md" }: { size?: "md" | "lg" }) {
       role="group"
       aria-label={t("switch")}
       className={`relative grid grid-cols-2 rounded-full bg-pine/[0.07] p-1 dark:bg-mist/[0.08] ${
-        lg ? "h-[52px] w-full short:h-12" : "h-10 w-[6.5rem]"
+        lg ? "h-[52px] w-full" : "h-11 w-[7rem]"
       }`}
     >
       {/* Sliding thumb */}
@@ -77,12 +77,20 @@ export function LanguageSwitcher({ size = "md" }: { size?: "md" | "lg" }) {
             lang={locale}
             onClick={() => switchTo(locale)}
             aria-pressed={selected}
-            aria-label={localeNames[locale]}
+            title={localeNames[locale]}
             className={`relative z-10 flex h-full items-center justify-center rounded-full font-medium transition-colors duration-300 ${
               lg ? "text-base short:text-[0.95rem]" : "text-sm"
             } ${selected ? "text-white dark:text-ink" : "text-stone hover:text-ink dark:text-haze dark:hover:text-mist"}`}
           >
-            {lg ? localeNames[locale] : locale.toUpperCase()}
+            {lg ? (
+              localeNames[locale]
+            ) : (
+              <>
+                {/* Visible code; screen readers hear "SQ Shqip" (name contains the visible text) */}
+                {locale.toUpperCase()}
+                <span className="sr-only"> {localeNames[locale]}</span>
+              </>
+            )}
           </button>
         );
       })}

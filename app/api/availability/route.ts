@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { BOOKING_WINDOW_DAYS, getAvailabilityRange, getAvailableSlots } from "@/lib/availability";
+import { BOOKING_WINDOW_DAYS, getAvailabilityRange, getAvailableSlots, getBookableDays } from "@/lib/availability";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { addDays, DATE_RE, todayInClinic } from "@/lib/timezone";
 
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 //   When rescheduling, the booking's own token is passed so its current slot
 //   is not counted as "taken" by itself.
 //
-// GET /api/availability?range
+// GET /api/availability?range[&token=<cancel_token>]
 //   → { days: [{ date, slots }, …] } — every day of the booking window
 //   (tomorrow … +14 days), including days with no open times. Used by the
 //   booking calendar so it can show "5 free" / "closed" on each day.
@@ -29,8 +29,16 @@ export async function GET(req: NextRequest) {
     const firstDay = addDays(today, 1); // the calendar starts tomorrow
     const lastDay = addDays(today, BOOKING_WINDOW_DAYS);
 
+    // Rescheduling passes the booking's token so its own slot isn't "taken" by itself
+    let ignoreBookingId: string | undefined;
+    const token = params.get("token");
+    if (token) {
+      const { data } = await supabaseAdmin.from("bookings").select("id").eq("cancel_token", token).maybeSingle();
+      ignoreBookingId = data?.id;
+    }
+
     if (params.get("range") !== null) {
-      return NextResponse.json({ days: await getAvailabilityRange(firstDay, lastDay) });
+      return NextResponse.json({ days: await getBookableDays({ ignoreBookingId }) });
     }
 
     const next = params.get("next");
@@ -43,13 +51,6 @@ export async function GET(req: NextRequest) {
     const date = params.get("date") ?? "";
     if (!DATE_RE.test(date)) {
       return NextResponse.json({ error: "date must be YYYY-MM-DD" }, { status: 400 });
-    }
-
-    let ignoreBookingId: string | undefined;
-    const token = params.get("token");
-    if (token) {
-      const { data } = await supabaseAdmin.from("bookings").select("id").eq("cancel_token", token).maybeSingle();
-      ignoreBookingId = data?.id;
     }
 
     const slots = await getAvailableSlots(date, { ignoreBookingId });

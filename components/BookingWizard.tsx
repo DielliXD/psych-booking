@@ -18,7 +18,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { createBooking } from "@/lib/bookings";
-import { DATE_RE, TIME_RE, dateParts, formatDateLabel, formatMonthRange } from "@/lib/timezone";
+import { DATE_RE, TIME_RE, formatDateLabel } from "@/lib/timezone";
+import { SlotPicker, useAvailability, type Day } from "@/components/booking/SlotPicker";
 import type { Prices } from "@/lib/prices";
 
 // Booking flow, 4 steps + success:
@@ -44,18 +45,21 @@ interface BookingData {
   note: string;
 }
 
-interface Day {
-  date: string;
-  slots: string[];
-}
-
 const STEP_KEYS = ["time", "session", "details", "confirm"] as const;
-const DAYS_PER_PAGE = 7;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 const FORMAT_ICON: Record<Format, LucideIcon> = { video: Video, chat: MessageCircle, async: Mail };
 
-export function BookingWizard({ prices }: { prices: Prices }) {
+// Keep a pre-picked date/time (from the home page) only if still free;
+// otherwise start on the first day that has times.
+function pickDay(list: Day[] | null | undefined, date: string | null, time: string | null) {
+  if (!list) return { date, time };
+  const picked = list.find((d) => d.date === date && d.slots.length);
+  if (picked) return { date, time: time && picked.slots.includes(time) ? time : null };
+  return { date: list.find((d) => d.slots.length)?.date ?? null, time: null };
+}
+
+export function BookingWizard({ prices, initialDays }: { prices: Prices; initialDays?: Day[] | null }) {
   const t = useTranslations("booking");
   const tTypes = useTranslations("booking.step1");
   const tFormats = useTranslations("booking.step2");
@@ -70,11 +74,15 @@ export function BookingWizard({ prices }: { prices: Prices }) {
     const date = searchParams.get("date");
     const time = searchParams.get("time");
     const validDate = date && DATE_RE.test(date) ? date : null;
+    // When the calendar came from the server, pick the day right away (same
+    // rule as applyDays), so the first paint already shows the times and
+    // nothing jumps after hydration (CLS).
+    const picked = pickDay(initialDays, validDate, validDate && time && TIME_RE.test(time) ? time : null);
     return {
       sessionType: null,
       format: null,
-      date: validDate,
-      time: validDate && time && TIME_RE.test(time) ? time : null,
+      date: picked.date,
+      time: picked.time,
       name: "",
       email: "",
       phone: "",
@@ -83,35 +91,28 @@ export function BookingWizard({ prices }: { prices: Prices }) {
       note: "",
     };
   });
-  const [days, setDays] = useState<Day[] | null>(null);
-  const [loadFailed, setLoadFailed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { days, failed: loadFailed, load } = useAvailability(undefined, initialDays);
 
   const update: Update = useCallback((key, value) => setData((prev) => ({ ...prev, [key]: value })), []);
 
-  const loadDays = useCallback(() => {
-    setLoadFailed(false);
-    setDays(null);
-    fetch("/api/availability?range", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((json) => {
-        const list: Day[] = Array.isArray(json.days) ? json.days : [];
-        setDays(list);
-        // Keep the pre-picked date/time only if still free; otherwise start on
-        // the first day that has times.
-        setData((prev) => {
-          const picked = list.find((d) => d.date === prev.date && d.slots.length);
-          if (picked) return { ...prev, time: prev.time && picked.slots.includes(prev.time) ? prev.time : null };
-          return { ...prev, date: list.find((d) => d.slots.length)?.date ?? null, time: null };
-        });
-      })
-      .catch(() => setLoadFailed(true));
+  // Calendar loaded in the browser (fallback): same rule as on first render.
+  const applyDays = useCallback((list: Day[]) => {
+    setData((prev) => ({ ...prev, ...pickDay(list, prev.date, prev.time) }));
   }, []);
 
+  const loadDays = useCallback(async () => {
+    const list = await load();
+    if (list) applyDays(list);
+  }, [load, applyDays]);
+
   useEffect(() => {
-    loadDays();
-  }, [loadDays]);
+    // The booking page normally renders with the calendar already loaded on
+    // the server (and the day already picked); fetch here only if it didn't.
+    if (!initialDays) loadDays();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once on mount
+  }, []);
 
   const canAdvance =
     step === 1
@@ -217,7 +218,23 @@ export function BookingWizard({ prices }: { prices: Prices }) {
             </p>
           )}
           <div key={step} className="animate-fadeUp">
-            {step === 1 && <StepTime data={data} update={update} days={days} failed={loadFailed} retry={loadDays} />}
+            {step === 1 && (
+              <>
+                <StepHeading title={t("time.title")} subtitle={t("time.subtitle")} />
+                <SlotPicker
+                  days={days}
+                  failed={loadFailed}
+                  retry={loadDays}
+                  date={data.date}
+                  time={data.time}
+                  onPickDate={(d) => {
+                    if (d !== data.date) update("time", null);
+                    update("date", d);
+                  }}
+                  onPickTime={(time) => update("time", time)}
+                />
+              </>
+            )}
             {step === 2 && <StepSession data={data} update={update} prices={prices} />}
             {step === 3 && <StepDetails data={data} update={update} />}
             {step === 4 && <StepConfirm data={data} price={price} onEdit={(s) => goTo(s)} />}
@@ -251,7 +268,7 @@ export function BookingWizard({ prices }: { prices: Prices }) {
       </div>
 
       {/* Phones & tablets: the action stays reachable at the bottom of the screen */}
-      <div className="mx-page-bleed sticky bottom-0 z-30 border-t border-line bg-linen/95 px-page pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md lg:hidden dark:border-mist/10 dark:bg-night/95">
+      <div className="mx-page-bleed sticky bottom-0 z-30 border-t border-line bg-linen/95 px-page pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md lg:hidden short:pb-[max(0.375rem,env(safe-area-inset-bottom))] short:pt-1.5 dark:border-mist/10 dark:bg-night/95">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
           <div className="min-w-0 text-[0.95rem] leading-tight">
             {data.date && data.time ? (
@@ -269,7 +286,7 @@ export function BookingWizard({ prices }: { prices: Prices }) {
               <p className="text-stone dark:text-haze">{t("pickTime")}</p>
             )}
           </div>
-          <PrimaryButton {...primaryShort} className="shrink-0" />
+          <PrimaryButton {...primaryShort} className="shrink-0 short:min-h-[44px]" />
         </div>
       </div>
     </div>
@@ -341,7 +358,7 @@ function StepNav({ current, onJump }: { current: Step; onJump: (s: Step) => void
               <span className={`${active ? "inline" : "hidden sm:inline"} whitespace-nowrap`}>{t(`steps.${key}`)}</span>
             </>
           );
-          const base = "flex min-h-[44px] items-center gap-2 rounded-full py-1.5 pl-1.5 pr-1.5 text-[0.95rem] font-medium transition-colors sm:pr-4";
+          const base = "flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-full py-1.5 pl-1.5 pr-1.5 text-[0.95rem] font-medium transition-colors sm:pr-4";
           return (
             <li key={key} className={active ? "min-w-0" : ""}>
               {done ? (
@@ -381,220 +398,6 @@ function StepHeading({ title, subtitle }: { title: string; subtitle?: string }) 
   );
 }
 
-/* ───────────────────────── Step 1 · Time ───────────────────────── */
-
-function StepTime({
-  data,
-  update,
-  days,
-  failed,
-  retry,
-}: {
-  data: BookingData;
-  update: Update;
-  days: Day[] | null;
-  failed: boolean;
-  retry: () => void;
-}) {
-  const t = useTranslations("booking.time");
-  const locale = useLocale();
-  const pages = days ? Math.ceil(days.length / DAYS_PER_PAGE) : 1;
-  const selectedIndex = days && data.date ? days.findIndex((d) => d.date === data.date) : -1;
-  const [page, setPage] = useState(0);
-
-  // Show the week that contains the selected day (e.g. pre-picked from the home page)
-  useEffect(() => {
-    if (selectedIndex >= 0) setPage(Math.floor(selectedIndex / DAYS_PER_PAGE));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the list (re)loads
-  }, [days]);
-
-  const visible = days ? days.slice(page * DAYS_PER_PAGE, page * DAYS_PER_PAGE + DAYS_PER_PAGE) : [];
-  const selectedDay = days?.find((d) => d.date === data.date);
-  const morning = selectedDay?.slots.filter((s) => s < "12:00") ?? [];
-  const afternoon = selectedDay?.slots.filter((s) => s >= "12:00") ?? [];
-  const nothingAtAll = days && days.every((d) => d.slots.length === 0);
-
-  return (
-    <div>
-      <StepHeading title={t("title")} subtitle={t("subtitle")} />
-
-      {failed && (
-        <div className="rounded-3xl border border-line bg-white p-6 dark:border-mist/10 dark:bg-mist/[0.03]">
-          <p className="mb-4 text-stone dark:text-haze">{t("error")}</p>
-          <button
-            type="button"
-            onClick={retry}
-            className="inline-flex min-h-[44px] items-center rounded-full border border-line px-5 font-semibold text-pine hover:border-pine dark:border-mist/20 dark:text-apricot"
-          >
-            {t("retry")}
-          </button>
-        </div>
-      )}
-
-      {!days && !failed && (
-        <div aria-busy="true" aria-label={t("loading")} className="space-y-6">
-          <div className="h-6 w-40 animate-pulse rounded-full bg-line/70 dark:bg-mist/10" />
-          <div className="grid grid-cols-7 gap-1 sm:gap-2">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className="h-[4.5rem] animate-pulse rounded-2xl bg-white dark:bg-mist/[0.06] sm:h-[5.75rem]" />
-            ))}
-          </div>
-          <div className="grid grid-cols-3 gap-2 xs:grid-cols-4 sm:grid-cols-5">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-12 animate-pulse rounded-xl bg-white dark:bg-mist/[0.06]" />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {days && nothingAtAll && (
-        <div className="rounded-3xl border border-line bg-white p-6 dark:border-mist/10 dark:bg-mist/[0.03]">
-          <p className="mb-4 leading-relaxed text-stone dark:text-haze">{t("emptyAll")}</p>
-          <Link
-            href={`/${locale}/contact`}
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-pine px-5 font-semibold text-white dark:bg-apricot dark:text-ink"
-          >
-            {t("contact")}
-            <ArrowRight size={16} aria-hidden="true" />
-          </Link>
-        </div>
-      )}
-
-      {days && !nothingAtAll && (
-        <>
-          {/* Week header with paging */}
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <p className="font-display text-lg font-semibold tracking-tight" aria-live="polite">
-              {formatMonthRange(
-                visible.map((d) => d.date),
-                locale
-              )}
-            </p>
-            <div className="flex gap-1.5">
-              <PageButton label={t("prevWeek")} disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
-                <ChevronLeft size={18} aria-hidden="true" />
-              </PageButton>
-              <PageButton label={t("nextWeek")} disabled={page >= pages - 1} onClick={() => setPage((p) => p + 1)}>
-                <ChevronRight size={18} aria-hidden="true" />
-              </PageButton>
-            </div>
-          </div>
-
-          {/* Days */}
-          <div key={page} className="grid animate-fadeUp grid-cols-7 gap-1 sm:gap-2">
-            {visible.map((d) => {
-              const { weekday, day } = dateParts(d.date, locale);
-              const free = d.slots.length;
-              const selected = d.date === data.date;
-              const closed = free === 0;
-              return (
-                <button
-                  key={d.date}
-                  type="button"
-                  disabled={closed}
-                  aria-pressed={selected}
-                  aria-label={`${formatDateLabel(d.date, locale)} — ${closed ? t("closed") : t("free", { count: free })}`}
-                  onClick={() => {
-                    update("date", d.date);
-                    if (!selected) update("time", null);
-                  }}
-                  className={`flex min-h-[4.5rem] flex-col items-center justify-center rounded-2xl border px-0.5 py-2 transition-colors duration-200 sm:min-h-[5.75rem] ${
-                    closed
-                      ? "cursor-not-allowed border-dashed border-line text-stone/70 dark:border-mist/15 dark:text-haze/60"
-                      : selected
-                        ? "border-night bg-night text-mist dark:border-apricot dark:bg-apricot dark:text-ink"
-                        : "border-line bg-white text-ink hover:border-pine/60 dark:border-mist/10 dark:bg-mist/[0.04] dark:text-mist dark:hover:border-mist/30"
-                  }`}
-                >
-                  <span className="text-[0.72rem] font-semibold uppercase tracking-wide opacity-75 sm:text-xs">{weekday}</span>
-                  <span className="font-display text-xl font-semibold leading-tight sm:text-2xl">{day}</span>
-                  {/* Phones: a dot for "has times". Larger: the count. */}
-                  <span
-                    aria-hidden="true"
-                    className={`mt-1 h-1.5 w-1.5 rounded-full sm:hidden ${closed ? "bg-transparent" : selected ? "bg-apricot dark:bg-ink" : "bg-pine dark:bg-apricot"}`}
-                  />
-                  <span
-                    aria-hidden="true"
-                    className={`mt-1 hidden whitespace-nowrap text-xs sm:block ${
-                      closed ? "" : selected ? "text-apricot dark:text-ink" : "text-pine dark:text-apricot"
-                    }`}
-                  >
-                    {closed ? t("closed") : t("free", { count: free })}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Times */}
-          <div className="mt-8">
-            {!selectedDay && <p className="text-stone dark:text-haze">{t("pickDay")}</p>}
-            {selectedDay && (
-              <div key={selectedDay.date} className="animate-fadeUp space-y-6">
-                {[
-                  { label: t("morning"), slots: morning },
-                  { label: t("afternoon"), slots: afternoon },
-                ]
-                  .filter((g) => g.slots.length)
-                  .map((g) => (
-                    <fieldset key={g.label}>
-                      <legend className="mb-3 text-sm font-semibold uppercase tracking-widest text-stone dark:text-haze">{g.label}</legend>
-                      <div className="grid grid-cols-3 gap-2 xs:grid-cols-4 sm:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5">
-                        {g.slots.map((s) => {
-                          const selected = data.time === s;
-                          return (
-                            <button
-                              key={s}
-                              type="button"
-                              aria-pressed={selected}
-                              onClick={() => update("time", s)}
-                              className={`flex min-h-[50px] items-center justify-center gap-1.5 rounded-xl border text-base font-semibold tabular-nums transition-colors duration-200 ${
-                                selected
-                                  ? "border-apricot bg-apricot text-ink"
-                                  : "border-line bg-white hover:border-pine/60 dark:border-mist/10 dark:bg-mist/[0.04] dark:hover:border-mist/30"
-                              }`}
-                            >
-                              {selected && <Check size={15} strokeWidth={3} aria-hidden="true" />}
-                              {s}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </fieldset>
-                  ))}
-              </div>
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function PageButton({
-  label,
-  disabled,
-  onClick,
-  children,
-}: {
-  label: string;
-  disabled: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      disabled={disabled}
-      onClick={onClick}
-      className="grid h-11 w-11 place-items-center rounded-full border border-line bg-white text-ink transition-colors hover:border-pine disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line dark:border-mist/15 dark:bg-transparent dark:text-mist"
-    >
-      {children}
-    </button>
-  );
-}
 
 /* ───────────────────────── Step 2 · Session ───────────────────────── */
 
@@ -631,7 +434,7 @@ function Choice({
       >
         <Icon size={20} aria-hidden="true" />
       </span>
-      <span className="min-w-0 flex-1 pr-6">
+      <span className="min-w-0 flex-1 pr-8">
         <span className="flex flex-wrap items-baseline justify-between gap-x-3">
           <span className="text-[1.05rem] font-semibold">{title}</span>
           {aside && <span className="font-display font-semibold text-pine dark:text-apricot">{aside}</span>}
@@ -902,7 +705,7 @@ function Success({ data, price }: { data: BookingData; price: string | null }) {
       <p className="mb-2 text-lg text-stone dark:text-haze">{t("step6.subtitle")}</p>
       {data.saveInfo && <p className="text-[0.95rem] text-stone dark:text-haze">{t("loginLinkSent")}</p>}
 
-      <div className="mx-auto mt-9 max-w-sm rounded-3xl bg-night p-6 text-left text-mist">
+      <div className="mx-auto mt-9 max-w-sm rounded-3xl bg-night dark:bg-mist/[0.07] dark:ring-1 dark:ring-inset dark:ring-mist/10 p-6 text-left text-mist">
         <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-apricot">{t("step6.summaryTitle")}</p>
         {data.date && data.time && (
           <p className="font-display text-2xl font-semibold tracking-tight">

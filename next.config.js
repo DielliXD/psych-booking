@@ -15,6 +15,16 @@ function lanAddresses() {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  poweredByHeader: false,
+  async headers() {
+    return [
+      {
+        // The hero video + poster: cache for a week, refresh quietly after that
+        source: "/animations/:file*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=86400" }],
+      },
+    ];
+  },
   allowedDevOrigins: [
     ...lanAddresses(),
     ...(process.env.DEV_ORIGINS ? process.env.DEV_ORIGINS.split(",").map((s) => s.trim()) : []),

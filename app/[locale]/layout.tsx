@@ -1,25 +1,13 @@
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages, getTranslations } from "next-intl/server";
+import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Figtree } from "next/font/google";
+import { bricolage, figtree } from "@/app/fonts";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { locales } from "@/i18n/config";
 import "../globals.css";
-
-// latin-ext covers Albanian diacritics (ë, ç)
-const bricolage = Bricolage_Grotesque({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-bricolage",
-  display: "swap",
-});
-
-const figtree = Figtree({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-figtree",
-  display: "swap",
-});
 
 export async function generateMetadata({ params: { locale } }: { params: { locale: string } }): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: "meta" });
@@ -42,6 +30,8 @@ export const viewport: Viewport = {
   ],
 };
 
+const CLIENT_NAMESPACES = ["nav", "footer", "theme", "language", "booking", "manage", "contactPage", "login"];
+
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
@@ -53,7 +43,14 @@ export default async function LocaleLayout({
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  const messages = await getMessages();
+  if (!locales.includes(locale as (typeof locales)[number])) notFound();
+  // Lets every page under this layout render statically (next-intl)
+  setRequestLocale(locale);
+  const all = await getMessages();
+  // Only the namespaces that client components use are sent to the browser;
+  // server-rendered pages (home, about, services, FAQ, legal, dashboard)
+  // translate on the server and don't need theirs in the bundle.
+  const messages = Object.fromEntries(CLIENT_NAMESPACES.filter((ns) => ns in all).map((ns) => [ns, all[ns]]));
 
   return (
     <html lang={locale} className={`${bricolage.variable} ${figtree.variable}`} suppressHydrationWarning>

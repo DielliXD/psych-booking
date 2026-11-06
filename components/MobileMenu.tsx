@@ -148,7 +148,7 @@ export function MobileMenu({
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto overscroll-contain px-3 py-4 short:py-2">
+        <nav className="flex-1 overflow-y-auto overscroll-contain px-3 py-4 short:py-2 short:pb-6 short:[mask-image:linear-gradient(to_bottom,black_calc(100%-1.75rem),transparent)]">
           <ul data-lang-fade className="flex flex-col gap-1">
             {links.map((link, i) => {
               const active = isActive(link.href);
@@ -196,7 +196,7 @@ export function MobileMenu({
           <Link
             href={`/${locale}/book`}
             onClick={onClose}
-            className="inline-flex h-[52px] items-center justify-center gap-2 rounded-full bg-pine px-6 text-base font-semibold text-white shadow-soft transition-transform active:scale-[0.98] short:h-12 short:flex-1 short:px-4 short:text-[0.95rem] dark:bg-apricot dark:text-ink"
+            className="inline-flex h-[52px] items-center justify-center gap-2 rounded-full bg-pine px-6 text-base font-semibold text-white shadow-soft transition-transform active:scale-[0.98] short:flex-1 short:px-4 short:text-[0.95rem] dark:bg-apricot dark:text-ink"
           >
             <span data-lang-fade className="whitespace-nowrap short:hidden">{t("book")}</span>
             <span data-lang-fade className="hidden whitespace-nowrap short:inline">{t("bookShort")}</span>

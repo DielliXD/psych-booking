@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Bricolage_Grotesque, Figtree } from "next/font/google";
+import { bricolage, figtree } from "@/app/fonts";
 import { useAdminSession } from "@/lib/useAdminSession";
 import { supabase } from "@/lib/supabase";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "../globals.css";
 
-const figtree = Figtree({ subsets: ["latin", "latin-ext"], variable: "--font-figtree", display: "swap" });
-const bricolage = Bricolage_Grotesque({ subsets: ["latin", "latin-ext"], variable: "--font-bricolage", display: "swap" });
 
 // This is a separate root layout from app/[locale]/layout.tsx — Next.js's
 // "multiple root layouts" pattern, since /admin isn't nested under [locale]

@@ -5,23 +5,21 @@ import { useEffect, useRef, useState } from "react";
 // The hero's breathing figure.
 //
 // Animation: "[BB] Brick breathing" by dia rt (LottieFiles, Lottie Simple
-// License), recoloured to the Shprehu palette → /public/animations/breathing.json.
-// The original 4-second loop is played at half speed = one calm 8-second
-// breath: frames 0–59 breathe in (eyes close, shoulders rise),
-// frames 60–119 breathe out (mouth opens).
+// License), recoloured to the Shprehu palette and pre-rendered to a short
+// looping video (public/animations/breathing.mp4, ~100 KB, 8 s = one calm
+// breath: 0–4 s breathe in, 4–8 s breathe out).
 //
-// Performance:
-// - lottie-web's SVG-only "light" build and the JSON are fetched AFTER the
-//   page has rendered, so they never delay the first paint.
+// Why a video and not the Lottie player: the player had to build and
+// redraw an SVG with JavaScript 60 times a second, which kept phones busy
+// and slowed the first load. The browser plays a video on the GPU with no
+// JavaScript at all.
+//
+// - The poster (one still frame, ~8 KB) shows instantly, before the video loads.
 // - Playback pauses whenever the figure is scrolled out of view.
-// - With "reduce motion" on, it shows a single calm frame and doesn't play.
-//
-// The "Breathe in… / Breathe out…" caption is driven by the animation's own
-// frame counter, so text and figure can never drift apart.
-const SPEED = 0.5;
-const EXHALE_FROM_FRAME = 60;
-const STILL_FRAME = 40; // eyes closed, calm
+// - With "reduce motion" on, it stays on the still frame.
+// The "Breathe in… / Breathe out…" caption follows the video's own clock.
 
+const BREATH_SECONDS = 8;
 type Phase = "in" | "out";
 
 export function BreathingFigure({
@@ -33,64 +31,30 @@ export function BreathingFigure({
   exhaleLabel: string;
   ariaLabel: string;
 }) {
-  const stageRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [phase, setPhase] = useState<Phase>("in");
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-    let observer: IntersectionObserver | undefined;
-    let anim: import("lottie-web").AnimationItem | undefined;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const video = videoRef.current;
+    if (!video) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    (async () => {
-      try {
-        const [{ default: lottie }, data] = await Promise.all([
-          import("lottie-web/build/player/lottie_light"),
-          fetch("/animations/breathing.json").then((r) => r.json()),
-        ]);
-        if (cancelled || !stageRef.current) return;
+    const onTime = () => {
+      const next: Phase = video.currentTime % BREATH_SECONDS < BREATH_SECONDS / 2 ? "in" : "out";
+      setPhase((prev) => (prev === next ? prev : next));
+    };
+    video.addEventListener("timeupdate", onTime);
 
-        anim = lottie.loadAnimation({
-          container: stageRef.current,
-          renderer: "svg",
-          loop: true,
-          autoplay: false,
-          animationData: data,
-          rendererSettings: { preserveAspectRatio: "xMidYMid slice", progressiveLoad: true },
-        });
-        anim.setSpeed(SPEED);
-        anim.addEventListener("DOMLoaded", () => !cancelled && setReady(true));
-
-        if (reduceMotion) {
-          anim.goToAndStop(STILL_FRAME, true);
-          return;
-        }
-
-        let last: Phase = "in";
-        anim.addEventListener("enterFrame", (e: { currentTime: number }) => {
-          const next: Phase = e.currentTime < EXHALE_FROM_FRAME ? "in" : "out";
-          if (next !== last) {
-            last = next;
-            setPhase(next);
-          }
-        });
-
-        // Only animate while visible (saves battery on phones)
-        observer = new IntersectionObserver(([entry]) => {
-          if (entry.isIntersecting) anim?.play();
-          else anim?.pause();
-        });
-        observer.observe(stageRef.current);
-      } catch {
-        // If the animation can't load, the calm disc + caption still show.
-      }
-    })();
+    // Only play while visible (saves battery on phones)
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) video.play().catch(() => undefined);
+      else video.pause();
+    });
+    observer.observe(video);
 
     return () => {
-      cancelled = true;
-      observer?.disconnect();
-      anim?.destroy();
+      observer.disconnect();
+      video.removeEventListener("timeupdate", onTime);
     };
   }, []);
 
@@ -111,13 +75,22 @@ export function BreathingFigure({
           aria-label={ariaLabel}
           className="absolute inset-0 overflow-hidden rounded-full bg-linen ring-2 ring-apricot/60 ring-offset-4 ring-offset-night"
         >
-          <div
-            ref={stageRef}
+          <video
+            ref={videoRef}
+            className="h-full w-full object-cover"
+            poster="/animations/breathing-poster.webp"
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            disablePictureInPicture
+            disableRemotePlayback
             aria-hidden="true"
-            className={`absolute left-1/2 top-[53%] h-[135%] w-[118%] -translate-x-1/2 -translate-y-1/2 transition-opacity duration-700 ${
-              ready ? "opacity-100" : "opacity-0"
-            }`}
-          />
+            width={720}
+            height={720}
+          >
+            <source src="/animations/breathing.mp4" type="video/mp4" />
+          </video>
         </div>
       </div>
 

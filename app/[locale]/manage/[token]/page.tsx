@@ -1,352 +1,527 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { Check, X, CalendarClock, Send } from "lucide-react";
-import { fetchAvailableSlots } from "@/lib/availabilityClient";
-import { addDays, formatClinicDateTime, formatDateLabel, todayInClinic } from "@/lib/timezone";
+import { ArrowRight, CalendarClock, Check, ChevronLeft, Mail, MessageCircle, Send, User, Users, Video, X } from "lucide-react";
+import { SlotPicker, useAvailability } from "@/components/booking/SlotPicker";
+import { formatClinicDateTime, formatDateLabel, utcToClinic } from "@/lib/timezone";
+
+// The page behind the link in every booking email: see the session,
+// reschedule it, cancel it, and (for chat / message sessions) talk.
+// No login — the unguessable token in the URL is the key.
 
 interface BookingDetail {
   id: string;
-  session_type: string;
-  format: string;
+  session_type: "individual" | "couples";
+  format: "video" | "chat" | "async";
   scheduled_at: string;
   status: string;
   meeting_link: string | null;
   patients: { name: string; email: string } | { name: string; email: string }[];
 }
 
+const FORMAT_ICON = { video: Video, chat: MessageCircle, async: Mail } as const;
+
 export default function ManageBookingPage() {
   const { token } = useParams<{ token: string }>();
   const locale = useLocale();
   const t = useTranslations("manage");
+  const tB = useTranslations("booking");
   const tTypes = useTranslations("booking.step1");
   const tFormats = useTranslations("booking.step2");
+  const tStatus = useTranslations("booking.status");
+
   const [booking, setBooking] = useState<BookingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [mode, setMode] = useState<"view" | "confirmCancel" | "reschedule">("view");
   const [cancelling, setCancelling] = useState(false);
   const [cancelled, setCancelled] = useState(false);
-  const [mode, setMode] = useState<"view" | "reschedule">("view");
-  const [rescheduled, setRescheduled] = useState(false);
-
-  async function load() {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/bookings/manage/${token}`);
-      if (!res.ok) throw new Error("not found");
-      const json = await res.json();
-      setBooking(json.booking);
-    } catch {
-      setNotFound(true);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const [rescheduledTo, setRescheduledTo] = useState<{ date: string; time: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    load();
+    let alive = true;
+    setLoading(true);
+    fetch(`/api/bookings/manage/${token}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
+      .then((json) => alive && setBooking(json.booking))
+      .catch(() => alive && setNotFound(true))
+      .finally(() => alive && setLoading(false));
+    return () => {
+      alive = false;
+    };
   }, [token]);
 
   async function handleCancel() {
     setCancelling(true);
-    const res = await fetch(`/api/bookings/manage/${token}/cancel`, { method: "POST" });
-    setCancelling(false);
-    if (res.ok) setCancelled(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/bookings/manage/${token}/cancel`, { method: "POST" });
+      if (!res.ok) throw new Error();
+      setCancelled(true);
+    } catch {
+      setError(t("genericError"));
+    } finally {
+      setCancelling(false);
+    }
   }
 
   if (loading) {
-    return <p className="max-w-md mx-auto px-page py-14 sm:py-24 text-sm text-ink/50 dark:text-mist/50">...</p>;
+    return (
+      <div className="mx-auto max-w-3xl px-page py-12 sm:py-16" aria-busy="true">
+        <div className="mb-8 h-10 w-56 animate-pulse rounded-full bg-line/70 dark:bg-mist/10" />
+        <div className="h-52 animate-pulse rounded-[1.75rem] bg-white dark:bg-mist/[0.06]" />
+      </div>
+    );
   }
 
   if (notFound || !booking) {
     return (
-      <div className="max-w-md mx-auto px-page py-14 sm:py-24 text-center">
-        <p className="text-ink/60 dark:text-mist/60">{t("invalidLink")}</p>
-      </div>
+      <Centered>
+        <IconBadge tone="muted">
+          <X size={26} aria-hidden="true" />
+        </IconBadge>
+        <h1 className="mb-3 text-display-md font-semibold">{t("invalidLink")}</h1>
+        <p className="mb-8 text-lg leading-relaxed text-stone dark:text-haze">{t("invalidHint")}</p>
+        <PillLink href={`/${locale}/book`}>{t("bookNew")}</PillLink>
+      </Centered>
     );
   }
 
   const patient = Array.isArray(booking.patients) ? booking.patients[0] : booking.patients;
-  const when = formatClinicDateTime(booking.scheduled_at, locale, { dateStyle: "full", timeStyle: "short" });
+  const current = utcToClinic(booking.scheduled_at);
   const isPast = new Date(booking.scheduled_at) < new Date();
   const isCancelled = cancelled || booking.status === "cancelled";
 
-  if (rescheduled) {
+  if (rescheduledTo) {
     return (
-      <div className="max-w-md mx-auto px-page py-16 sm:py-28 text-center animate-fadeUp">
-        <div className="mx-auto mb-7 w-16 h-16 rounded-full bg-gradient-to-br from-pine to-pine/70 dark:from-sage dark:to-sage/70 shadow-lifted flex items-center justify-center">
-          <Check className="text-linen dark:text-charcoalGreen" size={28} strokeWidth={2.5} />
+      <Centered>
+        <IconBadge>
+          <Check size={28} strokeWidth={2.5} aria-hidden="true" />
+        </IconBadge>
+        <h1 className="mb-3 text-display-md font-semibold">{t("rescheduledTitle")}</h1>
+        <p className="mb-8 text-lg text-stone dark:text-haze">{t("rescheduledBody")}</p>
+        <div className="mx-auto mb-8 max-w-sm rounded-3xl bg-night dark:bg-mist/[0.07] dark:ring-1 dark:ring-inset dark:ring-mist/10 p-6 text-left text-mist">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-apricot">{t("newTime")}</p>
+          <p className="font-display text-2xl font-semibold tracking-tight">
+            {formatDateLabel(rescheduledTo.date, locale)} · {rescheduledTo.time}
+          </p>
+          <p className="mt-1 text-haze">
+            {tTypes(booking.session_type)} · {tFormats(booking.format)}
+          </p>
         </div>
-        <h1 className="text-3xl mb-3 text-ink dark:text-mist tracking-tightest">{t("rescheduledTitle")}</h1>
-        <p className="text-sm leading-relaxed text-ink/60 dark:text-mist/60">
-          {t("rescheduledBody")}
-        </p>
-      </div>
+        <PillLink href={`/${locale}`} variant="ghost">
+          {tB("backHome")}
+        </PillLink>
+      </Centered>
     );
   }
 
+  if (isCancelled) {
+    return (
+      <Centered>
+        <IconBadge tone="muted">
+          <Check size={28} strokeWidth={2.5} aria-hidden="true" />
+        </IconBadge>
+        <h1 className="mb-3 text-display-md font-semibold">{t("cancelledTitle")}</h1>
+        <p className="mb-8 text-lg leading-relaxed text-stone dark:text-haze">{t("cancelledBody")}</p>
+        <PillLink href={`/${locale}/book`}>{t("bookNew")}</PillLink>
+      </Centered>
+    );
+  }
+
+  if (mode === "reschedule") {
+    return (
+      <Reschedule
+        token={token}
+        current={current}
+        onBack={() => setMode("view")}
+        onDone={(slot) => setRescheduledTo(slot)}
+      />
+    );
+  }
+
+  const TypeIcon = booking.session_type === "couples" ? Users : User;
+  const FormatIcon = FORMAT_ICON[booking.format] ?? Video;
+  const showJoin = booking.format === "video" && booking.meeting_link && !isPast;
+
   return (
-    <div className="max-w-md mx-auto px-page py-16 sm:py-28">
-      {isCancelled ? (
-        <div className="text-center animate-fadeUp">
-          <div className="mx-auto mb-7 w-16 h-16 rounded-full bg-gradient-to-br from-pine to-pine/70 dark:from-sage dark:to-sage/70 shadow-lifted flex items-center justify-center">
-            <Check className="text-linen dark:text-charcoalGreen" size={28} strokeWidth={2.5} />
-          </div>
-          <h1 className="text-3xl mb-3 text-ink dark:text-mist tracking-tightest">{t("cancelledTitle")}</h1>
-          <p className="text-sm leading-relaxed text-ink/60 dark:text-mist/60">
-            {t("cancelledBody")}
-          </p>
-        </div>
-      ) : mode === "reschedule" ? (
-        <RescheduleForm
-          token={token}
-          onDone={() => setRescheduled(true)}
-          onBack={() => setMode("view")}
+    <div className="mx-auto max-w-3xl px-page py-12 sm:py-16">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-display-md font-semibold">{t("title")}</h1>
+        <span
+          className={`rounded-full px-3.5 py-1.5 text-sm font-semibold ${
+            booking.status === "confirmed"
+              ? "bg-mint text-pineDark dark:bg-mist/10 dark:text-mist"
+              : "bg-apricot/25 text-clay dark:bg-apricot/15 dark:text-apricot"
+          }`}
+        >
+          {tStatus(booking.status as "pending" | "confirmed" | "completed" | "cancelled")}
+        </span>
+      </div>
+
+      {/* Session card */}
+      <div className="relative overflow-hidden rounded-[1.75rem] bg-night dark:bg-mist/[0.07] dark:ring-1 dark:ring-inset dark:ring-mist/10 p-6 text-mist sm:p-8">
+        <div
+          aria-hidden="true"
+          className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(240,162,123,0.35),rgba(240,162,123,0)_70%)]"
         />
-      ) : (
-        <>
-          <h1 className="text-3xl mb-8 text-ink dark:text-mist tracking-tightest">{t("title")}</h1>
-          <div className="rounded-3xl border border-pine/10 dark:border-sage/10 bg-white/40 dark:bg-white/[0.02] shadow-soft p-6 text-sm space-y-2 text-ink/70 dark:text-mist/70 mb-10">
-            <p className="font-medium text-ink dark:text-mist">{tTypes(booking.session_type as "individual" | "couples")}</p>
-            <p>{tFormats(booking.format as "video" | "chat" | "async")}</p>
-            <p>{when}</p>
-            <p className="pt-2 border-t border-pine/10 dark:border-sage/10">{patient?.name}</p>
-          </div>
-
-          {isPast ? (
-            <p className="text-sm text-ink/50 dark:text-mist/50">{t("pastSession")}</p>
-          ) : (
-            <div className="flex flex-wrap gap-3 mb-10">
-              <button
-                onClick={() => setMode("reschedule")}
-                className="inline-flex items-center gap-2 rounded-full bg-pine text-linen dark:bg-sage dark:text-charcoalGreen px-6 py-3.5 text-sm font-medium shadow-soft hover:shadow-lifted hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-smooth"
-              >
-                <CalendarClock size={16} /> {t("reschedule")}
-              </button>
-              <button
-                onClick={handleCancel}
-                disabled={cancelling}
-                className="inline-flex items-center gap-2 rounded-full border-2 border-clay text-clay px-6 py-3.5 text-sm font-medium hover:bg-clay/8 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-smooth disabled:opacity-50"
-              >
-                {cancelling ? t("cancelling") : t("cancel")} <X size={16} />
-              </button>
-            </div>
+        <div className="relative">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-apricot">{t("when")}</p>
+          <p className="font-display text-2xl font-semibold leading-snug tracking-tight sm:text-3xl">
+            {formatClinicDateTime(booking.scheduled_at, locale, { dateStyle: "full", timeStyle: "short" })}
+          </p>
+          <p className="mt-1 text-sm text-haze">{tB("time.subtitle")}</p>
+          <ul className="mt-6 flex flex-wrap gap-2">
+            <li className="flex items-center gap-2 rounded-full bg-mist/10 px-3.5 py-2 text-[0.95rem]">
+              <TypeIcon size={16} className="text-apricot" aria-hidden="true" />
+              {tTypes(booking.session_type)}
+            </li>
+            <li className="flex items-center gap-2 rounded-full bg-mist/10 px-3.5 py-2 text-[0.95rem]">
+              <FormatIcon size={16} className="text-apricot" aria-hidden="true" />
+              {tFormats(booking.format)}
+            </li>
+          </ul>
+          {patient && (
+            <p className="mt-6 border-t border-mist/10 pt-4 text-[0.95rem] text-haze">
+              {patient.name} · {patient.email}
+            </p>
           )}
-
-          {(booking.format === "chat" || booking.format === "async") && !isPast && (
-            <MessageThread token={token} />
+          {showJoin && (
+            <a
+              href={booking.meeting_link!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-full bg-apricot px-6 font-semibold text-ink xs:w-auto"
+            >
+              <Video size={18} aria-hidden="true" />
+              {t("joinSession")}
+            </a>
           )}
-        </>
+        </div>
+      </div>
+
+      {error && (
+        <p role="alert" className="mt-5 rounded-2xl bg-clay/10 px-4 py-3 text-clay dark:text-apricot">
+          {error}
+        </p>
       )}
+
+      {/* Actions */}
+      {isPast ? (
+        <p className="mt-6 text-stone dark:text-haze">{t("pastSession")}</p>
+      ) : mode === "confirmCancel" ? (
+        <div
+          ref={(el) => el?.scrollIntoView({ behavior: "smooth", block: "nearest" })}
+          role="alertdialog"
+          aria-labelledby="cancel-title"
+          className="mt-6 animate-fadeUp rounded-3xl border border-clay/30 bg-white p-5 sm:p-6 dark:bg-mist/[0.04]">
+          <p id="cancel-title" className="mb-1.5 text-lg font-semibold">
+            {t("cancelConfirmTitle")}
+          </p>
+          <p className="mb-5 leading-relaxed text-stone dark:text-haze">{t("cancelConfirmBody")}</p>
+          <div className="flex flex-col gap-3 xs:flex-row">
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={cancelling}
+              className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full bg-clay px-6 font-semibold text-white transition-opacity disabled:opacity-60"
+            >
+              {cancelling ? t("cancelling") : t("cancelYes")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("view")}
+              disabled={cancelling}
+              className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-line px-6 font-semibold hover:border-pine dark:border-mist/20"
+            >
+              {t("cancelNo")}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-6 flex flex-col gap-3 xs:flex-row">
+          <button
+            type="button"
+            onClick={() => setMode("reschedule")}
+            className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-full bg-pine px-6 font-semibold text-white transition-colors hover:bg-pineDark dark:bg-apricot dark:text-ink"
+          >
+            <CalendarClock size={18} aria-hidden="true" />
+            {t("reschedule")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("confirmCancel")}
+            className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-full border border-line px-6 font-semibold text-clay transition-colors hover:border-clay dark:border-mist/20 dark:text-apricot dark:hover:border-apricot"
+          >
+            <X size={18} aria-hidden="true" />
+            {t("cancel")}
+          </button>
+        </div>
+      )}
+
+      {(booking.format === "chat" || booking.format === "async") && !isPast && <MessageThread token={token} />}
     </div>
   );
 }
 
+/* ───────────────────────── Reschedule ───────────────────────── */
+
+function Reschedule({
+  token,
+  current,
+  onBack,
+  onDone,
+}: {
+  token: string;
+  current: { date: string; time: string };
+  onBack: () => void;
+  onDone: (slot: { date: string; time: string }) => void;
+}) {
+  const t = useTranslations("manage");
+  const tB = useTranslations("booking");
+  const locale = useLocale();
+  const { days, failed, load } = useAvailability(token);
+  const [date, setDate] = useState<string | null>(null);
+  const [time, setTime] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const reload = useCallback(async () => {
+    const list = await load();
+    if (!list) return;
+    // Start on the current session's day if it's still in the window and has other times
+    const onCurrent = list.find((d) => d.date === current.date && d.slots.some((s) => s !== current.time));
+    setDate(onCurrent ? onCurrent.date : (list.find((d) => d.slots.length)?.date ?? null));
+    setTime(null);
+  }, [load, current.date, current.time]);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  async function submit() {
+    if (!date || !time) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/bookings/manage/${token}/reschedule`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, time }),
+      });
+      if (res.ok) {
+        onDone({ date, time });
+        return;
+      }
+      const json = await res.json().catch(() => ({}));
+      if (json.error === "SLOT_TAKEN") {
+        setError(t("slotTaken"));
+        reload();
+      } else {
+        setError(t("genericError"));
+      }
+    } catch {
+      setError(t("genericError"));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl px-page pt-8 sm:pt-12">
+      <button
+        type="button"
+        onClick={onBack}
+        className="-ml-2 mb-4 inline-flex min-h-[44px] items-center gap-1 rounded-full pl-1 pr-3 text-[0.95rem] font-medium text-stone transition-colors hover:text-ink dark:text-haze dark:hover:text-mist"
+      >
+        <ChevronLeft size={18} aria-hidden="true" />
+        {t("back")}
+      </button>
+      <h1 className="text-display-md font-semibold">{t("pickNewTime")}</h1>
+      <p className="mb-6 mt-2 max-w-xl leading-relaxed text-stone dark:text-haze">{t("rescheduleSubtitle")}</p>
+
+      <p className="mb-6 inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl border border-line bg-white px-4 py-3 text-[0.95rem] dark:border-mist/10 dark:bg-mist/[0.04]">
+        <span className="text-stone dark:text-haze">{t("currentTime")}:</span>
+        <span className="font-semibold">
+          {formatDateLabel(current.date, locale)} · {current.time}
+        </span>
+      </p>
+
+      {error && (
+        <p role="alert" className="mb-5 rounded-2xl bg-clay/10 px-4 py-3 text-clay dark:text-apricot">
+          {error}
+        </p>
+      )}
+
+      <div className="pb-10">
+        <SlotPicker
+          days={days}
+          failed={failed}
+          retry={reload}
+          date={date}
+          time={time}
+          onPickDate={(d) => {
+            if (d !== date) setTime(null);
+            setDate(d);
+          }}
+          onPickTime={setTime}
+          current={current}
+          currentLabel={t("currentShort")}
+        />
+      </div>
+
+      {/* Action bar: stays at the bottom of the screen while picking */}
+      <div className="mx-page-bleed sticky bottom-0 z-30 border-t border-line bg-linen/95 px-page pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md dark:border-mist/10 dark:bg-night/95 md:mx-0 md:mb-6 md:rounded-2xl md:border md:px-5 md:pb-3 md:shadow-card">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 text-[0.95rem] leading-tight">
+            {date && time ? (
+              <>
+                <p className="hidden text-sm text-stone xs:block dark:text-haze">{t("newTime")}</p>
+                <p className="truncate font-semibold">
+                  {formatDateLabel(date, locale)} · {time}
+                </p>
+              </>
+            ) : (
+              <p className="text-stone dark:text-haze">{tB("pickTime")}</p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={!date || !time || submitting}
+            className="inline-flex min-h-[50px] shrink-0 items-center justify-center gap-2 rounded-full bg-pine px-6 font-semibold text-white transition-colors hover:bg-pineDark disabled:cursor-not-allowed disabled:bg-pine/30 dark:bg-apricot dark:text-ink dark:disabled:bg-mist/15 dark:disabled:text-mist/50"
+          >
+            {submitting ? t("saving") : t("confirmShort")}
+            <Check size={18} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────── Messages ───────────────────────── */
+
+interface Message {
+  id: string;
+  sender: "patient" | "psychologist";
+  content: string;
+  sent_at: string;
+}
+
 function MessageThread({ token }: { token: string }) {
   const t = useTranslations("manage");
-  interface Message {
-    id: string;
-    sender: "patient" | "psychologist";
-    content: string;
-    sent_at: string;
-  }
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
 
-  async function loadMessages() {
+  const loadMessages = useCallback(async () => {
     const res = await fetch(`/api/bookings/manage/${token}/messages`);
     if (res.ok) {
       const json = await res.json();
-      setMessages(json.messages);
+      setMessages(json.messages ?? []);
     }
-  }
+  }, [token]);
 
   useEffect(() => {
     loadMessages();
-    // Polling rather than websockets — the patient side deliberately
-    // doesn't use Supabase Auth (keeps the admin login lockdown simple
-    // and secure), so real-time subscriptions aren't available here.
+    // Polling rather than websockets — the patient side deliberately doesn't
+    // use Supabase Auth, so real-time subscriptions aren't available here.
     const interval = setInterval(loadMessages, 5000);
     return () => clearInterval(interval);
-  }, [token]);
+  }, [loadMessages]);
 
-  async function handleSend() {
-    if (!draft.trim()) return;
+  async function handleSend(e?: React.FormEvent) {
+    e?.preventDefault();
+    if (!draft.trim() || sending) return;
     setSending(true);
     await fetch(`/api/bookings/manage/${token}/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content: draft }),
-    });
+    }).catch(() => undefined);
     setDraft("");
     setSending(false);
     loadMessages();
   }
 
   return (
-    <div className="rounded-3xl border border-pine/10 dark:border-sage/10 bg-white/40 dark:bg-white/[0.02] shadow-soft p-6">
-      <p className="text-xs font-medium tracking-widest uppercase text-clay mb-5">{t("messages")}</p>
-
-      <div className="space-y-3 max-h-80 overflow-y-auto mb-5">
-        {messages.length === 0 && (
-          <p className="text-sm text-ink/40 dark:text-mist/40">{t("noMessages")}</p>
-        )}
+    <section className="mt-10 rounded-[1.75rem] border border-line bg-white p-5 sm:p-6 dark:border-mist/10 dark:bg-mist/[0.03]">
+      <h2 className="mb-5 font-display text-xl font-semibold tracking-tight">{t("messages")}</h2>
+      <div className="mb-5 max-h-96 space-y-3 overflow-y-auto" aria-live="polite">
+        {messages.length === 0 && <p className="text-stone dark:text-haze">{t("noMessages")}</p>}
         {messages.map((m) => (
           <div key={m.id} className={`flex ${m.sender === "patient" ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
+            <p
+              className={`max-w-[85%] whitespace-pre-line break-words rounded-2xl px-4 py-2.5 text-[0.95rem] leading-relaxed ${
                 m.sender === "patient"
-                  ? "bg-pine text-linen dark:bg-sage dark:text-charcoalGreen"
-                  : "bg-pine/8 dark:bg-sage/10 text-ink dark:text-mist"
+                  ? "rounded-br-md bg-pine text-white dark:bg-apricot dark:text-ink"
+                  : "rounded-bl-md bg-linen text-ink dark:bg-mist/10 dark:text-mist"
               }`}
             >
               {m.content}
-            </div>
+            </p>
           </div>
         ))}
       </div>
-
-      <div className="flex items-center gap-2">
+      <form onSubmit={handleSend} className="flex items-center gap-2">
+        <label htmlFor="msg-draft" className="sr-only">
+          {t("messagePlaceholder")}
+        </label>
         <input
+          id="msg-draft"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
           placeholder={t("messagePlaceholder")}
-          className="flex-1 rounded-full border-2 border-pine/10 dark:border-sage/10 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-pine dark:focus:border-sage"
+          className="min-h-[48px] min-w-0 flex-1 rounded-full border border-line bg-white px-4 text-base outline-none focus:border-pine focus:ring-2 focus:ring-pine/15 dark:border-mist/15 dark:bg-mist/[0.04] dark:focus:border-apricot"
         />
         <button
-          onClick={handleSend}
+          type="submit"
+          aria-label={t("send")}
           disabled={sending || !draft.trim()}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-pine text-linen dark:bg-sage dark:text-charcoalGreen disabled:opacity-40 transition-opacity"
+          className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-pine text-white transition-opacity disabled:opacity-40 dark:bg-apricot dark:text-ink"
         >
-          <Send size={15} />
+          <Send size={18} aria-hidden="true" />
         </button>
-      </div>
+      </form>
+    </section>
+  );
+}
+
+/* ───────────────────────── Small pieces ───────────────────────── */
+
+function Centered({ children }: { children: React.ReactNode }) {
+  return <div className="mx-auto max-w-xl animate-fadeUp px-page py-14 text-center sm:py-24">{children}</div>;
+}
+
+function IconBadge({ children, tone = "warm" }: { children: React.ReactNode; tone?: "warm" | "muted" }) {
+  return (
+    <div
+      className={`mx-auto mb-7 grid h-16 w-16 place-items-center rounded-full ${
+        tone === "warm" ? "bg-apricot text-ink shadow-lifted" : "bg-mint text-pine dark:bg-mist/10 dark:text-mist"
+      }`}
+    >
+      {children}
     </div>
   );
 }
 
-function RescheduleForm({
-  token,
-  onDone,
-  onBack,
-}: {
-  token: string;
-  onDone: () => void;
-  onBack: () => void;
-}) {
-  const locale = useLocale();
-  const t = useTranslations("manage");
-  const tStep3 = useTranslations("booking.step3");
-  const [date, setDate] = useState<string | null>(null);
-  const [time, setTime] = useState<string | null>(null);
-  const [slots, setSlots] = useState<string[]>([]);
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const days = useMemo(() => {
-    const today = todayInClinic();
-    return Array.from({ length: 14 }).map((_, i) => addDays(today, i + 1));
-  }, []);
-
-  useEffect(() => {
-    if (!date) {
-      setSlots([]);
-      return;
-    }
-    setLoadingSlots(true);
-    fetchAvailableSlots(date, token)
-      .then(setSlots)
-      .finally(() => setLoadingSlots(false));
-  }, [date]);
-
-  async function handleSubmit() {
-    if (!date || !time) return;
-    setSubmitting(true);
-    setError(null);
-    const res = await fetch(`/api/bookings/manage/${token}/reschedule`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date, time }),
-    });
-    setSubmitting(false);
-    if (res.ok) {
-      onDone();
-    } else {
-      const json = await res.json();
-      setError(json.error === "SLOT_TAKEN" ? t("slotTaken") : t("genericError"));
-    }
-  }
-
+function PillLink({ href, children, variant = "solid" }: { href: string; children: React.ReactNode; variant?: "solid" | "ghost" }) {
   return (
-    <div className="animate-fadeUp">
-      <h1 className="text-3xl mb-8 text-ink dark:text-mist tracking-tightest">{t("pickNewTime")}</h1>
-      {error && <p className="mb-5 text-sm text-clay bg-clay/10 rounded-xl px-4 py-3">{error}</p>}
-
-      <div className="flex flex-wrap gap-2 mb-6">
-        {days.map((iso) => {
-          const label = formatDateLabel(iso, locale);
-          const selected = date === iso;
-          return (
-            <button
-              key={iso}
-              type="button"
-              onClick={() => {
-                setDate(iso);
-                setTime(null);
-              }}
-              className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-all duration-200 ${
-                selected
-                  ? "border-pine bg-pine text-linen dark:border-sage dark:bg-sage dark:text-charcoalGreen shadow-soft"
-                  : "border-pine/10 dark:border-sage/10 text-ink/70 dark:text-mist/70 hover:border-pine/30 dark:hover:border-sage/30"
-              }`}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
-
-      {date && (
-        <div className="flex flex-wrap gap-2 mb-8">
-          {loadingSlots && <p className="text-sm text-ink/40 dark:text-mist/40">...</p>}
-          {!loadingSlots && slots.length === 0 && (
-            <p className="text-sm text-ink/50 dark:text-mist/50">{tStep3("noSlots")}</p>
-          )}
-          {!loadingSlots &&
-            slots.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setTime(s)}
-                className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-all duration-200 ${
-                  time === s
-                    ? "border-pine bg-pine text-linen dark:border-sage dark:bg-sage dark:text-charcoalGreen shadow-soft"
-                    : "border-pine/10 dark:border-sage/10 text-ink/70 dark:text-mist/70 hover:border-pine/30 dark:hover:border-sage/30"
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-        </div>
-      )}
-
-      <div className="flex items-center gap-4">
-        <button onClick={onBack} className="text-sm text-ink/55 dark:text-mist/55 hover:text-ink dark:hover:text-mist">
-          {t("back")}
-        </button>
-        <button
-          onClick={handleSubmit}
-          disabled={!date || !time || submitting}
-          className="inline-flex items-center gap-2 rounded-full bg-pine text-linen dark:bg-sage dark:text-charcoalGreen px-6 py-3.5 text-sm font-medium shadow-soft hover:shadow-lifted transition-all duration-300 ease-smooth disabled:opacity-30"
-        >
-          {submitting ? t("saving") : t("confirmNewTime")} <Check size={16} />
-        </button>
-      </div>
-    </div>
+    <Link
+      href={href}
+      className={`inline-flex min-h-[50px] items-center justify-center gap-2 rounded-full px-6 font-semibold ${
+        variant === "solid"
+          ? "bg-pine text-white hover:bg-pineDark dark:bg-apricot dark:text-ink"
+          : "border border-line text-pine hover:border-pine dark:border-mist/20 dark:text-apricot"
+      }`}
+    >
+      {children}
+      {variant === "solid" && <ArrowRight size={18} aria-hidden="true" />}
+    </Link>
   );
 }

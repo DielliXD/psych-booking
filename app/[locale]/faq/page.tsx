@@ -1,56 +1,70 @@
-"use client";
+import Link from "next/link";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { ArrowRight, ChevronDown, LifeBuoy } from "lucide-react";
+import { PageIntro } from "@/components/ui/PageIntro";
+import { getPrices } from "@/lib/prices";
+import { pageMetadata, type LocaleParams } from "@/lib/pageMetadata";
 
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+export const revalidate = 60;
 
-const QUESTION_KEYS = ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8"];
+const QUESTION_KEYS = ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8"] as const;
 
-export default function FaqPage() {
-  const t = useTranslations("faqPage");
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+export const generateMetadata = ({ params: { locale } }: LocaleParams) => pageMetadata(locale, { title: "nav.faq", description: "faqPage.lead" });
+
+export default async function FaqPage({ params: { locale } }: { params: { locale: string } }) {
+  // Static rendering with next-intl
+  setRequestLocale(locale);
+  const [t, prices] = await Promise.all([getTranslations("faqPage"), getPrices()]);
+
+  // The price answer uses the real prices from the admin, or says they're coming
+  const answer = (key: (typeof QUESTION_KEYS)[number]) => {
+    if (key !== "q2") return t(`${key}a`);
+    return prices.individual && prices.couples
+      ? t("q2aPrices", { individual: prices.individual, couples: prices.couples })
+      : t("q2aNoPrices");
+  };
 
   return (
-    <section className="max-w-3xl mx-auto px-page py-14 sm:py-24">
-      <h1 className="text-4xl mb-14 text-ink dark:text-mist tracking-tightest">{t("title")}</h1>
+    <div className="mx-auto max-w-3xl px-page pb-6 pt-12 sm:pt-20">
+      <PageIntro eyebrow={t("eyebrow")} title={t("title")} lead={t("lead")} />
 
-      <div className="divide-y divide-pine/10 dark:divide-sage/10 mb-20">
-        {QUESTION_KEYS.map((key, i) => {
-          const isOpen = openIndex === i;
-          return (
-            <div key={key} className="py-2">
-              <button
-                onClick={() => setOpenIndex(isOpen ? null : i)}
-                className="w-full flex items-center justify-between gap-4 py-4 text-left"
-              >
-                <span className="text-base font-medium text-ink dark:text-mist">{t(`${key}q`)}</span>
-                <ChevronDown
-                  size={18}
-                  className={`shrink-0 text-ink/40 dark:text-mist/40 transition-transform duration-300 ${
-                    isOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-              <div
-                className={`grid transition-all duration-300 ease-smooth ${
-                  isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-                }`}
-              >
-                <div className="overflow-hidden">
-                  <p className="pb-5 text-sm leading-relaxed text-ink/60 dark:text-mist/60 max-w-xl">
-                    {t(`${key}a`)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+      {/* Native <details>: works without JavaScript and with the keyboard */}
+      <div className="mt-10 flex flex-col gap-3 sm:mt-14">
+        {QUESTION_KEYS.map((key, i) => (
+          <details
+            key={key}
+            open={i === 0}
+            className="group rounded-2xl border border-line bg-white open:shadow-soft dark:border-mist/10 dark:bg-mist/[0.03]"
+          >
+            <summary className="flex min-h-[60px] cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-[1.05rem] font-semibold sm:px-6 [&::-webkit-details-marker]:hidden">
+              {t(`${key}q`)}
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-linen text-pine transition-transform duration-300 group-open:rotate-180 group-open:bg-apricot group-open:text-ink dark:bg-mist/10 dark:text-apricot">
+                <ChevronDown size={18} aria-hidden="true" />
+              </span>
+            </summary>
+            <p className="px-5 pb-5 text-[1.05rem] leading-relaxed text-stone sm:px-6 dark:text-haze">{answer(key)}</p>
+          </details>
+        ))}
       </div>
 
-      <div className="rounded-3xl border border-clay/25 bg-gradient-to-br from-clay/8 to-clay/[0.02] dark:from-clay/10 dark:to-clay/[0.02] p-7 shadow-soft">
-        <h2 className="text-base font-medium mb-2 text-ink dark:text-mist">{t("crisisNoteTitle")}</h2>
-        <p className="text-sm leading-relaxed text-ink/65 dark:text-mist/65">{t("crisisNoteText")}</p>
+      <div className="mt-12 grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col rounded-3xl bg-mint/60 dark:bg-mist/[0.07] dark:ring-1 dark:ring-inset dark:ring-mist/10 p-6 sm:p-7 dark:text-mist">
+          <h2 className="mb-2 text-xl font-semibold">{t("moreTitle")}</h2>
+          <p className="mb-6 leading-relaxed text-stone dark:text-haze">{t("moreText")}</p>
+          <Link
+            href={`/${locale}/contact`}
+            className="mt-auto inline-flex min-h-[48px] items-center justify-center gap-2 self-start rounded-full bg-pine px-6 font-semibold text-white dark:bg-apricot dark:text-ink"
+          >
+            {t("moreButton")}
+            <ArrowRight size={17} aria-hidden="true" />
+          </Link>
+        </div>
+        <div className="rounded-3xl border border-clay/25 bg-clay/[0.06] p-6 sm:p-7 dark:border-apricot/25 dark:bg-apricot/[0.06]">
+          <LifeBuoy size={24} className="mb-3 text-clay dark:text-apricot" aria-hidden="true" />
+          <h2 className="mb-2 text-xl font-semibold">{t("crisisNoteTitle")}</h2>
+          <p className="leading-relaxed text-ink/80 dark:text-mist/85">{t("crisisNoteText")}</p>
+        </div>
       </div>
-    </section>
+    </div>
   );
 }

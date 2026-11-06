@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getTranslations, getLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowRight, ChevronDown, Globe2, Languages, Mail, MessageCircle, ShieldCheck, Video } from "lucide-react";
 import { BreathingFigure } from "@/components/home/BreathingFigure";
 import { NextSlots } from "@/components/home/NextSlots";
@@ -11,8 +11,12 @@ const PORTRAIT_SRC: string | null = null;
 
 const FAQ_KEYS = ["q1", "q3", "q4", "q7"] as const;
 
-export default async function HomePage() {
-  const locale = await getLocale();
+// Prices on the home page come from the admin; re-read at most once a minute.
+export const revalidate = 60;
+
+export default async function HomePage({ params: { locale } }: { params: { locale: string } }) {
+  // Static rendering with next-intl
+  setRequestLocale(locale);
   const [t, tServices, tFaq, prices] = await Promise.all([
     getTranslations("home"),
     getTranslations("services"),
@@ -38,7 +42,7 @@ export default async function HomePage() {
       {/* ───────── Hero ───────── */}
       <section className="relative overflow-hidden bg-night text-mist">
         <div className="mx-auto px-page grid max-w-6xl items-center gap-8 pb-16 pt-8 sm:gap-10 sm:pb-20 sm:pt-14 md:grid-cols-[1.15fr_0.85fr] md:gap-12 lg:gap-16 lg:py-24 short:py-10">
-          <div className="order-2 animate-fadeUp md:order-1">
+          <div className="order-2 md:order-1">
             <p className="mb-5 inline-flex items-center gap-2.5 text-[0.8rem] font-semibold uppercase tracking-widest text-apricot sm:text-sm">
               <span className="h-2 w-2 rounded-full bg-apricot" aria-hidden="true" />
               {t("heroEyebrow")}
@@ -178,12 +182,14 @@ export default async function HomePage() {
         <h2 className="mb-8 text-display-lg font-semibold sm:mb-10">{t("formatsTitle")}</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           {formats.map(({ icon: Icon, title, text }) => (
-            <div key={title} className="rounded-3xl border border-line bg-white p-6 sm:p-7 dark:border-mist/10 dark:bg-mist/[0.03]">
-              <span className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-mint text-pine dark:bg-mist/10 dark:text-apricot">
+            <div key={title} className="flex items-start gap-4 rounded-3xl border border-line bg-white p-5 sm:block sm:p-7 dark:border-mist/10 dark:bg-mist/[0.03]">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-mint text-pine sm:mb-5 dark:bg-mist/10 dark:text-apricot">
                 <Icon size={22} aria-hidden="true" />
               </span>
-              <h3 className="mb-2 text-xl font-semibold">{title}</h3>
-              <p className="leading-relaxed text-stone dark:text-haze">{text}</p>
+              <div className="min-w-0">
+                <h3 className="mb-1 text-xl font-semibold sm:mb-2">{title}</h3>
+                <p className="leading-relaxed text-stone dark:text-haze">{text}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -199,20 +205,18 @@ export default async function HomePage() {
                 <div
                   key={p.label}
                   className={`flex flex-wrap items-end justify-between gap-5 rounded-3xl p-6 sm:p-8 ${
-                    p.dark ? "bg-night text-mist" : "border border-line bg-white dark:border-mist/10 dark:bg-mist/[0.03]"
+                    p.dark ? "bg-mint/60 dark:bg-mist/[0.07] dark:ring-1 dark:ring-inset dark:ring-mist/10 dark:text-mist" : "border border-line bg-white dark:border-mist/10 dark:bg-mist/[0.03]"
                   }`}
                 >
                   <div>
-                    <p className={`mb-1 ${p.dark ? "text-haze" : "text-stone dark:text-haze"}`}>
+                    <p className="mb-1 text-stone dark:text-haze">
                       {p.label} · {t("perSession")}
                     </p>
                     <p className="font-display text-4xl font-semibold tracking-tight">{p.price}</p>
                   </div>
                   <Link
                     href={`/${locale}/book`}
-                    className={`inline-flex min-h-[48px] items-center rounded-full px-6 font-semibold ${
-                      p.dark ? "bg-apricot text-ink" : "bg-pine text-white dark:bg-apricot dark:text-ink"
-                    }`}
+                    className="inline-flex min-h-[48px] items-center rounded-full bg-pine px-6 font-semibold text-white dark:bg-apricot dark:text-ink"
                   >
                     {t("bookThis")}
                   </Link>
@@ -251,7 +255,7 @@ export default async function HomePage() {
 
       {/* ───────── Final CTA ───────── */}
       <section className="mx-auto px-page max-w-6xl pb-6 pt-6 sm:pt-10">
-        <div className="relative overflow-hidden rounded-[2rem] bg-night px-6 py-12 text-mist sm:px-12 sm:py-16 lg:px-16">
+        <div className="relative overflow-hidden rounded-[2rem] bg-night dark:bg-mist/[0.07] dark:ring-1 dark:ring-inset dark:ring-mist/10 px-5 py-12 text-mist xs:px-6 sm:px-12 sm:py-16 lg:px-16">
           <div
             aria-hidden="true"
             className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(240,162,123,0.5),rgba(240,162,123,0)_70%)] animate-breathe"
@@ -263,7 +267,7 @@ export default async function HomePage() {
             </div>
             <Link
               href={`/${locale}/book`}
-              className="inline-flex min-h-[56px] w-full items-center justify-center gap-2.5 rounded-full bg-apricot px-8 text-lg font-semibold text-ink xs:w-auto"
+              className="inline-flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full bg-apricot px-4 text-base font-semibold text-ink xs:gap-2.5 xs:px-8 xs:text-lg xs:w-auto"
             >
               {t("finalCtaButton")}
               <ArrowRight size={18} aria-hidden="true" />

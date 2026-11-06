@@ -27,30 +27,43 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linen dark:bg-charcoalGreen px-6">
-      <div className="w-full max-w-sm">
-        <h1 className="text-2xl mb-6 font-display text-ink dark:text-mist">Admin Login</h1>
+    <div className="flex min-h-screen items-center justify-center bg-linen px-page py-10 dark:bg-night">
+      <div className="w-full max-w-sm rounded-[1.75rem] border border-line bg-white p-6 shadow-card sm:p-8 dark:border-mist/10 dark:bg-mist/[0.04]">
+        <p className="mb-1 text-sm font-semibold uppercase tracking-widest text-clay dark:text-apricot">Shprehu</p>
+        <h1 className="mb-2 font-display text-2xl font-semibold tracking-tight text-ink dark:text-mist">Admin login</h1>
         {sent ? (
-          <p className="text-sm text-ink/70 dark:text-mist/70">
+          <p role="status" className="leading-relaxed text-stone dark:text-haze">
             Check your email for a login link.
           </p>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="w-full rounded-lg border border-pine/15 dark:border-sage/15 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-pine dark:focus:border-sage"
-            />
-            {error && <p className="text-sm text-clay">{error}</p>}
+          <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+            <div>
+              <label htmlFor="admin-email" className="mb-1.5 block text-[0.95rem] font-semibold text-ink dark:text-mist">
+                Email
+              </label>
+              <input
+                id="admin-email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full rounded-xl border border-line bg-white px-4 py-3 text-base text-ink outline-none transition-colors focus:border-pine focus:ring-2 focus:ring-pine/15 dark:border-mist/15 dark:bg-mist/[0.04] dark:text-mist dark:focus:border-apricot"
+              />
+            </div>
+            {error && (
+              <p role="alert" className="rounded-xl bg-clay/10 px-4 py-3 text-clay dark:text-apricot">
+                {error}
+              </p>
+            )}
             <button
               type="submit"
               disabled={sending}
-              className="w-full rounded-full bg-pine text-linen dark:bg-sage dark:text-charcoalGreen px-6 py-3 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="inline-flex min-h-[50px] w-full items-center justify-center rounded-full bg-pine px-6 font-semibold text-white transition-colors hover:bg-pineDark disabled:opacity-60 dark:bg-apricot dark:text-ink"
             >
-              {sending ? "Sending..." : "Send login link"}
+              {sending ? "Sending…" : "Send login link"}
             </button>
           </form>
         )}

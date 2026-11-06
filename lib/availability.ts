@@ -113,7 +113,11 @@ export async function isSlotAvailable(
  * time) in 3 queries total instead of 3 per day. Used by the booking calendar
  * and the home page. Same rules as getAvailableSlots().
  */
-export async function getAvailabilityRange(from: string, to: string): Promise<{ date: string; slots: string[] }[]> {
+export async function getAvailabilityRange(
+  from: string,
+  to: string,
+  options: { ignoreBookingId?: string } = {}
+): Promise<{ date: string; slots: string[] }[]> {
   if (!DATE_RE.test(from) || !DATE_RE.test(to) || from > to) return [];
   checkConfig();
 
@@ -121,6 +125,15 @@ export async function getAvailabilityRange(from: string, to: string): Promise<{ 
   const lastBookable = addDays(today, BOOKING_WINDOW_DAYS);
   const dates: string[] = [];
   for (let d = from; d <= to; d = addDays(d, 1)) dates.push(d);
+
+  let bookingsQuery = supabaseAdmin
+    .from("bookings")
+    .select("scheduled_at")
+    .eq("psychologist_id", PSYCHOLOGIST_ID)
+    .neq("status", "cancelled")
+    .gte("scheduled_at", clinicTimeToUtc(from, "00:00").toISOString())
+    .lt("scheduled_at", clinicTimeToUtc(addDays(to, 1), "00:00").toISOString());
+  if (options.ignoreBookingId) bookingsQuery = bookingsQuery.neq("id", options.ignoreBookingId);
 
   const [exceptionsRes, rulesRes, bookingsRes] = await Promise.all([
     supabaseAdmin
@@ -130,13 +143,7 @@ export async function getAvailabilityRange(from: string, to: string): Promise<{ 
       .gte("date", from)
       .lte("date", to),
     supabaseAdmin.from("availability_rules").select("day_of_week, start_time, end_time").eq("psychologist_id", PSYCHOLOGIST_ID),
-    supabaseAdmin
-      .from("bookings")
-      .select("scheduled_at")
-      .eq("psychologist_id", PSYCHOLOGIST_ID)
-      .neq("status", "cancelled")
-      .gte("scheduled_at", clinicTimeToUtc(from, "00:00").toISOString())
-      .lt("scheduled_at", clinicTimeToUtc(addDays(to, 1), "00:00").toISOString()),
+    bookingsQuery,
   ]);
   if (exceptionsRes.error) throw new Error(`availability_exceptions query failed: ${exceptionsRes.error.message}`);
   if (rulesRes.error) throw new Error(`availability_rules query failed: ${rulesRes.error.message}`);
@@ -157,4 +164,10 @@ export async function getAvailabilityRange(from: string, to: string): Promise<{ 
     });
     return { date, slots };
   });
+}
+
+/** Every day the booking calendar shows (tomorrow … +14 days) with its open times. */
+export async function getBookableDays(options: { ignoreBookingId?: string } = {}) {
+  const today = todayInClinic();
+  return getAvailabilityRange(addDays(today, 1), addDays(today, BOOKING_WINDOW_DAYS), options);
 }

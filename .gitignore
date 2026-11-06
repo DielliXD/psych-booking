@@ -4,3 +4,7 @@ node_modules
 .env*.local
 .DS_Store
 !.env.example
+
+# Local notes for Claude (do not commit)
+CLAUDE.md
+.claude/

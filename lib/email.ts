@@ -22,8 +22,8 @@ const copy = {
     linkPending: "You'll receive the video call link by email closer to your session.",
     sessionTypes: { individual: "Individual", couples: "Couples" },
     formats: { video: "Video Call", chat: "Live Chat", async: "Messaging" },
-    manageLinkText: "Need to cancel? Manage your booking here",
-    footer: "If you need to reschedule or cancel, just reply to this email.",
+    manageLinkText: "Change the time or cancel your session",
+    footer: "You can change the time or cancel any time with the link above.",
   },
   sq: {
     subject: "Seanca jote është konfirmuar",
@@ -36,8 +36,8 @@ const copy = {
     linkPending: "Do ta marrësh lidhjen e video-thirrjes me email para seancës.",
     sessionTypes: { individual: "Individuale", couples: "Për Çifte" },
     formats: { video: "Video-thirrje", chat: "Bisedë e Drejtpërdrejtë", async: "Mesazhe" },
-    manageLinkText: "Ke nevojë të anulosh? Menaxho rezervimin këtu",
-    footer: "Nëse ke nevojë të riplanifikosh ose anulosh, thjesht përgjigju këtij emaili.",
+    manageLinkText: "Ndrysho orën ose anulo seancën",
+    footer: "Orën mund ta ndryshosh ose seancën ta anulosh kurdo me lidhjen më lart.",
   },
 } as const;
 

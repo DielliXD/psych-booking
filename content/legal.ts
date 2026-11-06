@@ -9,15 +9,8 @@
 // registered (add the business name and registration number) and bump
 // LAST_UPDATED whenever the text changes.
 
-export const PRACTICE = {
-  name: "Filloreta Bokshi",
-  roleSq: "psikologe",
-  roleEn: "psychologist",
-  city: "Prishtinë, Kosovë",
-  cityEn: "Prishtina, Kosovo",
-  email: "filloretabokshi@gmail.com",
-  // businessName: "", registrationNumber: "",  ← add once registered
-};
+import { PRACTICE } from "@/lib/practice";
+export { PRACTICE };
 
 export const LAST_UPDATED = "2026-11-01";
 
